@@ -8,6 +8,37 @@
   }
   body {
     @apply bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100;
+    /* Elegant diagonal checkerboard texture */
+    background-image:
+      repeating-linear-gradient(45deg,
+        rgba(241, 245, 249, 0.6) 0px,
+        rgba(241, 245, 249, 0.6) 1px,
+        transparent 1px,
+        transparent 12px
+      ),
+      repeating-linear-gradient(-45deg,
+        rgba(241, 245, 249, 0.6) 0px,
+        rgba(241, 245, 249, 0.6) 1px,
+        transparent 1px,
+        transparent 12px
+      );
+    background-size: auto;
+  }
+  .dark body {
+    /* Softer lines for dark mode */
+    background-image:
+      repeating-linear-gradient(45deg,
+        rgba(148, 163, 184, 0.08) 0px,
+        rgba(148, 163, 184, 0.08) 1px,
+        transparent 1px,
+        transparent 12px
+      ),
+      repeating-linear-gradient(-45deg,
+        rgba(148, 163, 184, 0.08) 0px,
+        rgba(148, 163, 184, 0.08) 1px,
+        transparent 1px,
+        transparent 12px
+      );
   }
 }
 
@@ -22,7 +53,7 @@
     @apply border border-accent-500 text-accent-700 hover:bg-accent-50 dark:text-accent-200 dark:hover:bg-accent-800;
   }
   .card {
-    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800;
+    @apply rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800;
   }
 }
 

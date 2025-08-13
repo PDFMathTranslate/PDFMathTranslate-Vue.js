@@ -7,7 +7,7 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <template>
-  <div ref="wrapper" class="relative w-full h-[420px] overflow-auto rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+  <div ref="wrapper" class="relative w-full h-[420px] overflow-auto rounded border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900">
     <canvas ref="canvas" class="block mx-auto" />
   </div>
 </template>
