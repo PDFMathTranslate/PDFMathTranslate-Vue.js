@@ -1,94 +1,121 @@
-from flask import Flask, request, send_file
-from celery import Celery, Task
-from celery.result import AsyncResult
-from pdf2zh import translate_stream
-import tqdm
-import json
 import io
+import json
+import threading
+import uuid
+from typing import Any, Dict, Optional
+
+from flask import Flask, request, send_file
+from flask_cors import CORS
+
+from pdf2zh import translate_stream
 from pdf2zh.doclayout import ModelInstance
-from pdf2zh.config import ConfigManager
 
 flask_app = Flask("pdf2zh")
-flask_app.config.from_mapping(
-    CELERY=dict(
-        broker_url=ConfigManager.get("CELERY_BROKER", "redis://127.0.0.1:6379/0"),
-        result_backend=ConfigManager.get("CELERY_RESULT", "redis://127.0.0.1:6379/0"),
-    )
-)
+
+# Enable CORS for frontend development/usage
+CORS(flask_app, resources={r"/v1/*": {"origins": "*"}})
 
 
-def celery_init_app(app: Flask) -> Celery:
-    class FlaskTask(Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app = Celery(app.name)
-    celery_app.config_from_object(app.config["CELERY"])
-    celery_app.Task = FlaskTask
-    celery_app.set_default()
-    celery_app.autodiscover_tasks()
-    app.extensions["celery"] = celery_app
-    return celery_app
+class InMemoryTask:
+    def __init__(self, task_id: str) -> None:
+        self.id = task_id
+        self.state: str = "PENDING"
+        self.info: Optional[Dict[str, int]] = None
+        self.error: Optional[str] = None
+        self.mono: Optional[bytes] = None
+        self.dual: Optional[bytes] = None
+        self.cancel_event = threading.Event()
+        self.thread: Optional[threading.Thread] = None
 
 
-celery_app = celery_init_app(flask_app)
+_TASKS: Dict[str, InMemoryTask] = {}
+_LOCK = threading.Lock()
 
 
-@celery_app.task(bind=True)
-def translate_task(
-    self: Task,
-    stream: bytes,
-    args: dict,
-):
-    def progress_bar(t: tqdm.tqdm):
-        self.update_state(state="PROGRESS", meta={"n": t.n, "total": t.total})  # noqa
-        print(f"Translating {t.n} / {t.total} pages")
+def _run_task(task: InMemoryTask, stream: bytes, args: Dict[str, Any]) -> None:
+    try:
 
-    doc_mono, doc_dual = translate_stream(
-        stream,
-        callback=progress_bar,
-        model=ModelInstance.value,
-        **args,
-    )
-    return doc_mono, doc_dual
+        def progress_bar(t) -> None:
+            with _LOCK:
+                task.state = "PROGRESS"
+                task.info = {"n": int(t.n), "total": int(t.total)}
+
+        mono, dual = translate_stream(
+            stream,
+            callback=progress_bar,
+            cancellation_event=task.cancel_event,
+            model=ModelInstance.value,
+            **args,
+        )
+        with _LOCK:
+            task.mono = mono
+            task.dual = dual
+            task.state = "SUCCESS"
+    except Exception as e:  # noqa: BLE001
+        with _LOCK:
+            task.error = str(e)
+            # Distinguish cancel
+            if task.cancel_event.is_set():
+                task.state = "REVOKED"
+            else:
+                task.state = "FAILURE"
 
 
 @flask_app.route("/v1/translate", methods=["POST"])
 def create_translate_tasks():
     file = request.files["file"]
     stream = file.stream.read()
-    print(request.form.get("data"))
-    args = json.loads(request.form.get("data"))
-    task = translate_task.delay(stream, args)
-    return {"id": task.id}
+    args = json.loads(request.form.get("data") or "{}")
+
+    task_id = str(uuid.uuid4())
+    task = InMemoryTask(task_id)
+    with _LOCK:
+        _TASKS[task_id] = task
+
+    worker = threading.Thread(target=_run_task, args=(task, stream, args), daemon=True)
+    task.thread = worker
+    worker.start()
+    return {"id": task_id}
 
 
-@flask_app.route("/v1/translate/<id>", methods=["GET"])
-def get_translate_task(id: str):
-    result: AsyncResult = celery_app.AsyncResult(id)
-    if str(result.state) == "PROGRESS":
-        return {"state": str(result.state), "info": result.info}
-    else:
-        return {"state": str(result.state)}
+@flask_app.route("/v1/health", methods=["GET"])
+def health_check():
+    return {"status": "ok"}, 200
 
 
-@flask_app.route("/v1/translate/<id>", methods=["DELETE"])
-def delete_translate_task(id: str):
-    result: AsyncResult = celery_app.AsyncResult(id)
-    result.revoke(terminate=True)
-    return {"state": str(result.state)}
+@flask_app.route("/v1/translate/<task_id>", methods=["GET"])
+def get_translate_task(task_id: str):
+    with _LOCK:
+        task = _TASKS.get(task_id)
+        if task is None:
+            return {"error": "not found"}, 404
+        state = task.state
+        info = task.info
+    if state == "PROGRESS":
+        return {"state": state, "info": info}
+    return {"state": state}
 
 
-@flask_app.route("/v1/translate/<id>/<format>")
-def get_translate_result(id: str, format: str):
-    result = celery_app.AsyncResult(id)
-    if not result.ready():
-        return {"error": "task not finished"}, 400
-    if not result.successful():
-        return {"error": "task failed"}, 400
-    doc_mono, doc_dual = result.get()
-    to_send = doc_mono if format == "mono" else doc_dual
+@flask_app.route("/v1/translate/<task_id>", methods=["DELETE"])
+def delete_translate_task(task_id: str):
+    with _LOCK:
+        task = _TASKS.get(task_id)
+        if task is None:
+            return {"error": "not found"}, 404
+        task.cancel_event.set()
+        task.state = "REVOKED"
+    return {"state": "REVOKED"}
+
+
+@flask_app.route("/v1/translate/<task_id>/<file_format>")
+def get_translate_result(task_id: str, file_format: str = "mono"):
+    with _LOCK:
+        task = _TASKS.get(task_id)
+        if task is None:
+            return {"error": "not found"}, 404
+        if task.state != "SUCCESS" or task.mono is None or task.dual is None:
+            return {"error": "task not finished"}, 400
+        to_send = task.mono if file_format == "mono" else task.dual
     return send_file(io.BytesIO(to_send), "application/pdf")
 
 
