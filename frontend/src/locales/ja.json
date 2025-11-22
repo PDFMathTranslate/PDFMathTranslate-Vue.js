@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "alpha"
+  },
+  "fileSelector": {
+    "clickToUpload": "クリックしてアップロード",
+    "dragAndDrop": "またはドラッグ&ドロップ",
+    "subtitle": "レイアウトを保持しながら翻訳します。"
+  },
+  "translation": {
+    "options": "翻訳オプション",
+    "optionsDescription": "翻訳の設定を行います。",
+    "file": "ファイル",
+    "link": "リンク",
+    "pdfLink": "PDFリンク",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "元の言語",
+    "to": "対象言語",
+    "selectLanguage": "言語を選択",
+    "service": "サービス",
+    "selectService": "サービスを選択",
+    "startTranslation": "翻訳を開始",
+    "translating": "翻訳中...",
+    "download": "翻訳済みPDFをダウンロード",
+    "result": "Translation Result",
+    "resultDescription": "Preview and download your translated PDF",
+    "downloadMono": "Download Mono PDF",
+    "downloadDual": "Download Dual PDF",
+    "restart": "Start New Translation"
+  },
+  "settings": {
+    "title": "設定",
+    "outputPreference": "出力設定",
+    "monoOnly": "単一言語のみ",
+    "dualTranslateFirst": "翻訳版を最初に",
+    "alternatingPages": "交互ページ",
+    "bilingual": "二言語",
+    "rateLimiting": "Rate Limiting",
+    "qps": "QPS (Queries Per Second)",
+    "qpsPlaceholder": "QPS limit for translation service",
+    "poolMaxWorkers": "Pool Max Workers",
+    "poolMaxWorkersPlaceholder": "Maximum number of workers for translation pool",
+    "termQps": "Term QPS",
+    "termQpsPlaceholder": "QPS limit for term extraction translation service",
+    "termPoolMaxWorkers": "Term Pool Max Workers",
+    "termPoolMaxWorkersPlaceholder": "Maximum number of workers for term extraction pool",
+    "pdfProcessing": "PDF Processing",
+    "pages": "Pages",
+    "pagesPlaceholder": "Pages to translate (e.g. '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "Watermark Output Mode",
+    "watermarked": "Watermarked",
+    "noWatermark": "No Watermark",
+    "both": "Both",
+    "maxPagesPerPart": "Max Pages Per Part",
+    "maxPagesPerPartPlaceholder": "Maximum pages per part for split translation",
+    "translationOptions": "Translation Options",
+    "minTextLength": "Min Text Length",
+    "minTextLengthPlaceholder": "Minimum text length to translate",
+    "ignoreCache": "Ignore Cache",
+    "customSystemPrompt": "Custom System Prompt",
+    "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "advanced": "Advanced",
+    "translateTableText": "Translate Table Text",
+    "skipScannedDetection": "Skip Scanned Detection",
+    "ocrWorkaround": "OCR Workaround",
+    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
+  },
+  "language": {
+    "select": "言語を選択",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "作成者",
+    "and": "と"
+  },
+  "pwa": {
+    "install": "アプリをインストール"
+  },
+  "header": {
+    "howDoesItWork": "どのように動作しますか？"
+  }
+}

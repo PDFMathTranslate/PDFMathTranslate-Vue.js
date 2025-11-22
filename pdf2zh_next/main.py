@@ -89,13 +89,10 @@ async def main() -> int:
     babeldoc.assets.assets.warmup()
 
     if settings.basic.gui:
-        from pdf2zh_next.gui import setup_gui
+        from pdf2zh_next.server import run_server
 
-        setup_gui(
-            auth_file=settings.gui_settings.auth_file,
-            welcome_page=settings.gui_settings.welcome_page,
-            server_port=settings.gui_settings.server_port,
-        )
+        port = settings.gui_settings.server_port if settings.gui_settings.server_port else 7860
+        await run_server(port=port)
         return 0
 
     assert len(settings.basic.input_files) >= 1, "At least one input file is required"

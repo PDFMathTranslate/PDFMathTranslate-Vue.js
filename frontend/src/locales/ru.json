@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "alpha"
+  },
+  "fileSelector": {
+    "clickToUpload": "Нажмите для загрузки",
+    "dragAndDrop": "или перетащите файл",
+    "subtitle": "Для перевода с сохранением макета."
+  },
+  "translation": {
+    "options": "Параметры перевода",
+    "optionsDescription": "Настройте параметры перевода.",
+    "file": "Файл",
+    "link": "Ссылка",
+    "pdfLink": "Ссылка на PDF",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "Из",
+    "to": "В",
+    "selectLanguage": "Выбрать язык",
+    "service": "Сервис",
+    "selectService": "Выбрать сервис",
+    "startTranslation": "Начать перевод",
+    "translating": "Перевод...",
+    "download": "Скачать переведенный PDF",
+    "result": "Translation Result",
+    "resultDescription": "Preview and download your translated PDF",
+    "downloadMono": "Download Mono PDF",
+    "downloadDual": "Download Dual PDF",
+    "restart": "Start New Translation"
+  },
+  "settings": {
+    "title": "Настройки",
+    "outputPreference": "Предпочтения вывода",
+    "monoOnly": "Только моно",
+    "dualTranslateFirst": "Поместить переведенную версию первой",
+    "alternatingPages": "Чередующиеся страницы",
+    "bilingual": "Двуязычный",
+    "rateLimiting": "Rate Limiting",
+    "qps": "QPS (Queries Per Second)",
+    "qpsPlaceholder": "QPS limit for translation service",
+    "poolMaxWorkers": "Pool Max Workers",
+    "poolMaxWorkersPlaceholder": "Maximum number of workers for translation pool",
+    "termQps": "Term QPS",
+    "termQpsPlaceholder": "QPS limit for term extraction translation service",
+    "termPoolMaxWorkers": "Term Pool Max Workers",
+    "termPoolMaxWorkersPlaceholder": "Maximum number of workers for term extraction pool",
+    "pdfProcessing": "PDF Processing",
+    "pages": "Pages",
+    "pagesPlaceholder": "Pages to translate (e.g. '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "Watermark Output Mode",
+    "watermarked": "Watermarked",
+    "noWatermark": "No Watermark",
+    "both": "Both",
+    "maxPagesPerPart": "Max Pages Per Part",
+    "maxPagesPerPartPlaceholder": "Maximum pages per part for split translation",
+    "translationOptions": "Translation Options",
+    "minTextLength": "Min Text Length",
+    "minTextLengthPlaceholder": "Minimum text length to translate",
+    "ignoreCache": "Ignore Cache",
+    "customSystemPrompt": "Custom System Prompt",
+    "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "advanced": "Advanced",
+    "translateTableText": "Translate Table Text",
+    "skipScannedDetection": "Skip Scanned Detection",
+    "ocrWorkaround": "OCR Workaround",
+    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
+  },
+  "language": {
+    "select": "Выбрать язык",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "Создано",
+    "and": "и"
+  },
+  "pwa": {
+    "install": "Установить приложение"
+  },
+  "header": {
+    "howDoesItWork": "Как это работает?"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "alpha"
+  },
+  "fileSelector": {
+    "clickToUpload": "點擊上傳",
+    "dragAndDrop": "或拖拽檔案",
+    "subtitle": "在保持佈局的同時進行翻譯。"
+  },
+  "translation": {
+    "options": "翻譯選項",
+    "optionsDescription": "配置您的翻譯偏好。",
+    "file": "檔案",
+    "link": "連結",
+    "pdfLink": "PDF連結",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "源語言",
+    "to": "目標語言",
+    "selectLanguage": "選擇語言",
+    "service": "服務",
+    "selectService": "選擇服務",
+    "startTranslation": "開始翻譯",
+    "translating": "翻譯中...",
+    "download": "下載翻譯後的PDF",
+    "result": "翻譯結果",
+    "resultDescription": "預覽並下載翻譯後的PDF",
+    "downloadMono": "下載單語PDF",
+    "downloadDual": "下載雙語PDF",
+    "restart": "開始新翻譯"
+  },
+  "settings": {
+    "title": "設定",
+    "outputPreference": "輸出偏好",
+    "monoOnly": "僅單語",
+    "dualTranslateFirst": "翻譯版本優先",
+    "alternatingPages": "交替頁面",
+    "bilingual": "雙語",
+    "rateLimiting": "速率限制",
+    "qps": "QPS (每秒查詢數)",
+    "qpsPlaceholder": "翻譯服務的QPS限制",
+    "poolMaxWorkers": "最大工作執行緒數",
+    "poolMaxWorkersPlaceholder": "翻譯池的最大工作執行緒數",
+    "termQps": "術語QPS",
+    "termQpsPlaceholder": "術語提取翻譯服務的QPS限制",
+    "termPoolMaxWorkers": "術語最大工作執行緒數",
+    "termPoolMaxWorkersPlaceholder": "術語提取池的最大工作執行緒數",
+    "pdfProcessing": "PDF處理",
+    "pages": "頁面",
+    "pagesPlaceholder": "要翻譯的頁面 (例如 '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "浮水印輸出模式",
+    "watermarked": "有浮水印",
+    "noWatermark": "無浮水印",
+    "both": "兩者",
+    "maxPagesPerPart": "每部分最大頁數",
+    "maxPagesPerPartPlaceholder": "分割翻譯的每部分最大頁數",
+    "translationOptions": "翻譯選項",
+    "minTextLength": "最小文本長度",
+    "minTextLengthPlaceholder": "翻譯的最小文本長度",
+    "ignoreCache": "忽略快取",
+    "customSystemPrompt": "自訂系統提示詞",
+    "customSystemPromptPlaceholder": "用於翻譯的自訂系統提示詞",
+    "advanced": "進階",
+    "translateTableText": "翻譯表格文字",
+    "skipScannedDetection": "跳過掃描檢測",
+    "ocrWorkaround": "OCR 替代方案",
+    "autoEnableOcrWorkaround": "自動啟用 OCR 替代方案"
+  },
+  "language": {
+    "select": "選擇語言",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "由",
+    "and": "和"
+  },
+  "pwa": {
+    "install": "安裝應用程式"
+  },
+  "header": {
+    "howDoesItWork": "它是如何運作的？"
+  }
+}

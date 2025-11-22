@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "alpha"
+  },
+  "fileSelector": {
+    "clickToUpload": "클릭하여 업로드",
+    "dragAndDrop": "또는 드래그 앤 드롭",
+    "subtitle": "레이아웃을 유지하면서 번역합니다."
+  },
+  "translation": {
+    "options": "번역 옵션",
+    "optionsDescription": "번역 설정을 구성합니다.",
+    "file": "파일",
+    "link": "링크",
+    "pdfLink": "PDF 링크",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "원본 언어",
+    "to": "대상 언어",
+    "selectLanguage": "언어 선택",
+    "service": "서비스",
+    "selectService": "서비스 선택",
+    "startTranslation": "번역 시작",
+    "translating": "번역 중...",
+    "download": "번역된 PDF 다운로드",
+    "result": "Translation Result",
+    "resultDescription": "Preview and download your translated PDF",
+    "downloadMono": "Download Mono PDF",
+    "downloadDual": "Download Dual PDF",
+    "restart": "Start New Translation"
+  },
+  "settings": {
+    "title": "설정",
+    "outputPreference": "출력 설정",
+    "monoOnly": "단일 언어만",
+    "dualTranslateFirst": "번역 버전을 먼저",
+    "alternatingPages": "교대 페이지",
+    "bilingual": "이중 언어",
+    "rateLimiting": "Rate Limiting",
+    "qps": "QPS (Queries Per Second)",
+    "qpsPlaceholder": "QPS limit for translation service",
+    "poolMaxWorkers": "Pool Max Workers",
+    "poolMaxWorkersPlaceholder": "Maximum number of workers for translation pool",
+    "termQps": "Term QPS",
+    "termQpsPlaceholder": "QPS limit for term extraction translation service",
+    "termPoolMaxWorkers": "Term Pool Max Workers",
+    "termPoolMaxWorkersPlaceholder": "Maximum number of workers for term extraction pool",
+    "pdfProcessing": "PDF Processing",
+    "pages": "Pages",
+    "pagesPlaceholder": "Pages to translate (e.g. '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "Watermark Output Mode",
+    "watermarked": "Watermarked",
+    "noWatermark": "No Watermark",
+    "both": "Both",
+    "maxPagesPerPart": "Max Pages Per Part",
+    "maxPagesPerPartPlaceholder": "Maximum pages per part for split translation",
+    "translationOptions": "Translation Options",
+    "minTextLength": "Min Text Length",
+    "minTextLengthPlaceholder": "Minimum text length to translate",
+    "ignoreCache": "Ignore Cache",
+    "customSystemPrompt": "Custom System Prompt",
+    "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "advanced": "Advanced",
+    "translateTableText": "Translate Table Text",
+    "skipScannedDetection": "Skip Scanned Detection",
+    "ocrWorkaround": "OCR Workaround",
+    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
+  },
+  "language": {
+    "select": "언어 선택",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "제작",
+    "and": "및"
+  },
+  "pwa": {
+    "install": "앱 설치"
+  },
+  "header": {
+    "howDoesItWork": "작동 방식은?"
+  }
+}

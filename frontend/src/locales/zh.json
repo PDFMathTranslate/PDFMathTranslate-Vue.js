@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "测试版"
+  },
+  "fileSelector": {
+    "clickToUpload": "选择",
+    "dragAndDrop": "或 拖拽 文件到此处",
+    "subtitle": "松开后将立即开始翻译"
+  },
+  "translation": {
+    "options": "翻译",
+    "optionsDescription": "",
+    "file": "文件",
+    "link": "链接",
+    "pdfLink": "",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "源语言",
+    "to": "目标语言",
+    "selectLanguage": "选择语言",
+    "service": "服务",
+    "selectService": "选择服务",
+    "startTranslation": "开始翻译",
+    "translating": "翻译中...",
+    "download": "下载翻译后的PDF",
+    "result": "翻译结果",
+    "resultDescription": "预览并下载翻译后的PDF",
+    "downloadMono": "下载单语PDF",
+    "downloadDual": "下载双语PDF",
+    "restart": "开始新翻译"
+  },
+  "settings": {
+    "title": "设置",
+    "outputPreference": "输出偏好",
+    "monoOnly": "单语",
+    "dualTranslateFirst": "翻译版本优先",
+    "alternatingPages": "交错排列",
+    "bilingual": "双语",
+    "rateLimiting": "速率限制",
+    "qps": "QPS (每秒查询数)",
+    "qpsPlaceholder": "翻译服务的QPS限制",
+    "poolMaxWorkers": "最大工作线程数",
+    "poolMaxWorkersPlaceholder": "翻译池的最大工作线程数",
+    "termQps": "术语QPS",
+    "termQpsPlaceholder": "术语提取翻译服务的QPS限制",
+    "termPoolMaxWorkers": "术语最大工作线程数",
+    "termPoolMaxWorkersPlaceholder": "术语提取池的最大工作线程数",
+    "pdfProcessing": "PDF处理",
+    "pages": "页面",
+    "pagesPlaceholder": "要翻译的页面 (例如 '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "水印输出模式",
+    "watermarked": "有水印",
+    "noWatermark": "无水印",
+    "both": "两者",
+    "maxPagesPerPart": "每部分最大页数",
+    "maxPagesPerPartPlaceholder": "分割翻译的每部分最大页数",
+    "translationOptions": "翻译选项",
+    "minTextLength": "最小文本长度",
+    "minTextLengthPlaceholder": "翻译的最小文本长度",
+    "ignoreCache": "忽略缓存",
+    "customSystemPrompt": "自定义系统提示词",
+    "customSystemPromptPlaceholder": "用于翻译的自定义系统提示词",
+    "advanced": "高级",
+    "translateTableText": "翻译表格文字",
+    "skipScannedDetection": "跳过扫描检测",
+    "ocrWorkaround": "OCR 变通方案",
+    "autoEnableOcrWorkaround": "自动启用 OCR 变通方案"
+  },
+  "language": {
+    "select": "选择语言",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "由",
+    "and": "和"
+  },
+  "pwa": {
+    "install": "安装应用"
+  },
+  "header": {
+    "howDoesItWork": "它是如何工作的？"
+  }
+}

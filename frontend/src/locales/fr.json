@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "PDFMathTranslate",
+    "subtitle": "alpha"
+  },
+  "fileSelector": {
+    "clickToUpload": "Cliquez pour télécharger",
+    "dragAndDrop": "ou glisser-déposer",
+    "subtitle": "Pour traduire tout en préservant les mises en page."
+  },
+  "translation": {
+    "options": "Options de traduction",
+    "optionsDescription": "Configurez vos préférences de traduction.",
+    "file": "Fichier",
+    "link": "Lien",
+    "pdfLink": "Lien PDF",
+    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "from": "De",
+    "to": "Vers",
+    "selectLanguage": "Sélectionner la langue",
+    "service": "Service",
+    "selectService": "Sélectionner le service",
+    "startTranslation": "Démarrer la traduction",
+    "translating": "Traduction en cours...",
+    "download": "Télécharger le PDF traduit",
+    "result": "Translation Result",
+    "resultDescription": "Preview and download your translated PDF",
+    "downloadMono": "Download Mono PDF",
+    "downloadDual": "Download Dual PDF",
+    "restart": "Start New Translation"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "outputPreference": "Préférence de sortie",
+    "monoOnly": "Mono-seulement",
+    "dualTranslateFirst": "Mettre la version traduite en premier",
+    "alternatingPages": "Pages alternées",
+    "bilingual": "Bilingue",
+    "rateLimiting": "Rate Limiting",
+    "qps": "QPS (Queries Per Second)",
+    "qpsPlaceholder": "QPS limit for translation service",
+    "poolMaxWorkers": "Pool Max Workers",
+    "poolMaxWorkersPlaceholder": "Maximum number of workers for translation pool",
+    "termQps": "Term QPS",
+    "termQpsPlaceholder": "QPS limit for term extraction translation service",
+    "termPoolMaxWorkers": "Term Pool Max Workers",
+    "termPoolMaxWorkersPlaceholder": "Maximum number of workers for term extraction pool",
+    "pdfProcessing": "PDF Processing",
+    "pages": "Pages",
+    "pagesPlaceholder": "Pages to translate (e.g. '1,2,1-,-3,3-5')",
+    "watermarkOutputMode": "Watermark Output Mode",
+    "watermarked": "Watermarked",
+    "noWatermark": "No Watermark",
+    "both": "Both",
+    "maxPagesPerPart": "Max Pages Per Part",
+    "maxPagesPerPartPlaceholder": "Maximum pages per part for split translation",
+    "translationOptions": "Translation Options",
+    "minTextLength": "Min Text Length",
+    "minTextLengthPlaceholder": "Minimum text length to translate",
+    "ignoreCache": "Ignore Cache",
+    "customSystemPrompt": "Custom System Prompt",
+    "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "advanced": "Advanced",
+    "translateTableText": "Translate Table Text",
+    "skipScannedDetection": "Skip Scanned Detection",
+    "ocrWorkaround": "OCR Workaround",
+    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
+  },
+  "language": {
+    "select": "Sélectionner la langue",
+    "english": "English",
+    "chinese": "简体中文",
+    "chineseTraditional": "繁體中文",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "french": "Français",
+    "german": "Deutsch",
+    "spanish": "Español",
+    "russian": "Русский",
+    "italian": "Italiano",
+    "portuguese": "Português"
+  },
+  "footer": {
+    "builtBy": "Construit par",
+    "and": "et"
+  },
+  "pwa": {
+    "install": "Installer l'application"
+  },
+  "header": {
+    "howDoesItWork": "Comment ça marche ?"
+  }
+}
