@@ -1,8 +1,12 @@
 <div align="center">
 
-<img src="./docs/images/banner.png" width="320px"  alt="banner"/>
+<img src="./docs/images/gui-vue.jpeg" alt="banner"/>
 
-<h2 id="title">PDFMathTranslate</h2>
+<h2 id="title">Experimental GUI for PDFMathTranslate-next</h2>
+
+In this fork, active developers are working on a Vue.js GUI for PDFMathTranslate-next, which brings a more firendly user experience, substantially improved quality, and much more features.
+
+This fork, however, is still under development and is not stable. It is not recommended to use it for production.
 
 <p>
   <!-- PyPI -->
