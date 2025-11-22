@@ -32,10 +32,10 @@
   "settings": {
     "title": "Settings",
     "outputPreference": "Output Preference",
-    "monoOnly": "Mono-only",
-    "dualTranslateFirst": "Put translated version first",
-    "alternatingPages": "Alternating pages",
-    "bilingual": "Bilingual",
+    "mono": "Translated",
+    "dualTranslateFirst": "Prioritize Translation",
+    "alternatingPages": "Vertical",
+    "bilingual": "Horizontal",
     "rateLimiting": "Rate Limiting",
     "qps": "QPS (Queries Per Second)",
     "qpsPlaceholder": "QPS limit for translation service",
@@ -91,4 +91,3 @@
     "howDoesItWork": "How does it work?"
   }
 }
-

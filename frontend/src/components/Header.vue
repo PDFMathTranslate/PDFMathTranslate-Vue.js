@@ -126,8 +126,9 @@ const toggleTheme = () => {
         <Teleport to="body">
           <div
             v-if="showPreview"
-            class="fixed z-[15000] bg-white dark:bg-black border rounded-lg shadow-lg p-2 pointer-events-none"
+            class="fixed bg-white dark:bg-black border rounded-lg shadow-lg p-2 pointer-events-none"
             :style="{
+              zIndex: 2147483647,
               top: popupStyle.top,
               right: popupStyle.right,
               maxWidth: '40vw',

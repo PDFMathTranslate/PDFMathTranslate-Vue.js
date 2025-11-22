@@ -168,17 +168,38 @@ const autoEnableOcrWorkaround = computed({
       <AccordionItem value="output-preference">
         <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
-          <div class="flex items-center justify-between">
-            <Label for="bilingual">{{ t('settings.bilingual') }}</Label>
-            <Switch id="bilingual" v-model="bilingual" />
+          <div class="grid grid-cols-3 gap-4">
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': !bilingual && !alternatingPages }"
+              @click="() => { bilingual = false; alternatingPages = false }"
+            >
+              <img src="@/assets/icons/trans-only.png" class="w-12 h-12" />
+              <span class="text-sm font-medium">{{ t('settings.mono') }}</span>
+            </div>
+
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': bilingual && !alternatingPages }"
+              @click="() => { bilingual = true; alternatingPages = false }"
+            >
+              <img src="@/assets/icons/compare-hor.png" class="w-12 h-12" />
+              <span class="text-sm font-medium">{{ t('settings.bilingual') }}</span>
+            </div>
+
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': alternatingPages }"
+              @click="() => { alternatingPages = true; bilingual = false }"
+            >
+              <img src="@/assets/icons/compare-vert.png" class="w-12 h-12" />
+              <span class="text-sm font-medium">{{ t('settings.alternatingPages') }}</span>
+            </div>
           </div>
-          <div class="flex items-center justify-between">
+
+          <div class="flex items-center justify-between pt-2" v-if="bilingual">
             <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
             <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
-          </div>
-          <div class="flex items-center justify-between">
-            <Label for="alternating-pages">{{ t('settings.alternatingPages') }}</Label>
-            <Switch id="alternating-pages" v-model="alternatingPages" />
           </div>
         </AccordionContent>
       </AccordionItem>
