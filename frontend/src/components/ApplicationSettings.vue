@@ -1,21 +1,55 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useColorMode } from '@vueuse/core'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Moon, Sun, Laptop } from 'lucide-vue-next'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const colorMode = useColorMode({
+  disableTransition: false
+})
+
+const supportedLocales = [
+  { code: 'en', label: 'English', native: 'English' },
+  { code: 'zh', label: '简体中文', native: '简体中文' },
+  { code: 'zh-TW', label: '繁體中文', native: '繁體中文' },
+  { code: 'ja', label: '日本語', native: '日本語' },
+  { code: 'ko', label: '한국어', native: '한국어' },
+  { code: 'fr', label: 'Français', native: 'Français' },
+  { code: 'de', label: 'Deutsch', native: 'Deutsch' },
+  { code: 'es', label: 'Español', native: 'Español' },
+  { code: 'ru', label: 'Русский', native: 'Русский' },
+  { code: 'it', label: 'Italiano', native: 'Italiano' },
+  { code: 'pt', label: 'Português', native: 'Português' },
+]
+
+const changeLanguage = (langCode) => {
+  locale.value = langCode
+  localStorage.setItem('locale', langCode)
+}
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
-  config: { type: Object, default: () => ({ services: [] }) }
+  config: { type: Object, default: () => ({ services: [] }) },
+  openAccordion: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const accordionValue = ref('output-preference')
+
+// Watch for external accordion open requests
+watch(() => props.openAccordion, (newValue) => {
+  if (newValue) {
+    accordionValue.value = newValue
+  }
+}, { immediate: true })
 
 const model = computed({
   get: () => props.modelValue,
@@ -184,6 +218,15 @@ const autoEnableOcrWorkaround = computed({
   }
 })
 
+// Appearance
+const accentColor = computed({
+  get: () => model.value?.accentColor || 'black',
+  set: (val) => { 
+    if (!model.value) model.value = {}
+    model.value.accentColor = val 
+  }
+})
+
 const resetSettings = () => {
   localStorage.clear()
   window.location.reload()
@@ -292,8 +335,57 @@ const currentServiceFields = computed(() => {
     <p class="text-sm text-gray-500"> Settings will be automatically saved. </p>
   </div> -->
   <div class="space-y-6">
-    <Accordion type="single" collapsible class="w-full" defaultValue="output-preference">
+    <Accordion type="single" collapsible class="w-full" v-model="accordionValue">
       
+      <!-- <AccordionItem value="general">
+        <AccordionTrigger>{{ t('settings.general') || 'General' }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="space-y-2">
+             <Label>{{ t('language.select') }}</Label>
+             <Select :model-value="locale" @update:model-value="changeLanguage">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="lang in supportedLocales" :key="lang.code" :value="lang.code">
+                  {{ lang.native }}
+                </SelectItem>
+              </SelectContent>
+             </Select>
+          </div>
+
+          <div class="space-y-2">
+            <Label>{{ t('settings.appearance') }}</Label>
+            <div class="grid grid-cols-3 gap-4">
+               <div 
+                class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+                :class="{ 'bg-accent border-primary': colorMode === 'light' }"
+                @click="colorMode = 'light'"
+               >
+                 <Sun class="w-6 h-6" />
+                 <span class="text-sm font-medium">{{ t('settings.light') || 'Light' }}</span>
+               </div>
+               <div 
+                class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+                :class="{ 'bg-accent border-primary': colorMode === 'dark' }"
+                @click="colorMode = 'dark'"
+               >
+                 <Moon class="w-6 h-6" />
+                 <span class="text-sm font-medium">{{ t('settings.dark') || 'Dark' }}</span>
+               </div>
+               <div 
+                class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+                :class="{ 'bg-accent border-primary': colorMode === 'auto' }"
+                @click="colorMode = 'auto'"
+               >
+                 <Laptop class="w-6 h-6" />
+                 <span class="text-sm font-medium">{{ t('settings.auto') || 'Auto' }}</span>
+               </div>
+            </div>
+          </div> -->
+        <!-- </AccordionContent>
+      </AccordionItem> --> 
+
       <!-- New Service Settings Accordion Item -->
       <AccordionItem value="output-preference">
         <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
@@ -482,6 +574,36 @@ const currentServiceFields = computed(() => {
           </div>
         </AccordionContent>
       </AccordionItem>
+      <AccordionItem value="appearance">
+        <AccordionTrigger>{{ t('settings.appearance') }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="space-y-2">
+            <Label>{{ t('settings.accentColor') }}</Label>
+            <div class="grid grid-cols-5 gap-3">
+              <div 
+                v-for="color in ['black', 'sky', 'lime', 'orange', 'pink']" 
+                :key="color"
+                class="border-2 rounded-lg p-3 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-all"
+                :class="{ 'border-primary ring-2 ring-primary/20': accentColor === color, 'border-border': accentColor !== color }"
+                @click="accentColor = color"
+              >
+                <div 
+                  class="w-8 h-8 rounded-full"
+                  :class="{
+                    'bg-black dark:bg-white': color === 'black',
+                    'bg-sky-800': color === 'sky',
+                    'bg-lime-800': color === 'lime',
+                    'bg-orange-800': color === 'orange',
+                    'bg-pink-800': color === 'pink'
+                  }"
+                />
+                <span class="text-xs font-medium">{{ t(`settings.accentColors.${color}`) }}</span>
+              </div>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
       <AccordionItem value="advanced">
         <AccordionTrigger>{{ t('settings.advanced') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">

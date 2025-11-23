@@ -6,7 +6,11 @@
   "fileSelector": {
     "clickToUpload": "Click to upload or drop a PDF file here",
     "dragAndDrop": "Translation will start immediately.",
-    "subtitle": "The translation will start immediately."
+    "subtitle": "The translation will start immediately.",
+    "currentService": "Using",
+    "changeService": "Chnage Service",
+    "freeService": "free service sponsored by",
+    "devSponsor": "Development sponsored by"
   },
   "translation": {
     "options": "File",
@@ -69,6 +73,15 @@
     "ignoreCache": "Ignore Cache",
     "customSystemPrompt": "Custom System Prompt",
     "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "appearance": "Appearance",
+    "accentColor": "Accent Color",
+    "accentColors": {
+      "black": "Black",
+      "sky": "Sky",
+      "lime": "Lime",
+      "orange": "Orange",
+      "pink": "Pink"
+    },
     "advanced": "Experimental Features",
     "translateTableText": "Translate Table",
     "skipScannedDetection": "Skip Scanned Detection",
@@ -108,5 +121,18 @@
   },
   "header": {
     "howDoesItWork": "How does it work?"
+  },
+  "service": {
+    "status": {
+      "ready": "Service found & communicatable",
+      "busy": "Busy / Translating",
+      "error": "Error",
+      "unknown": "Unknown Status"
+    },
+    "cpu": "CPU Load",
+    "memory": "Memory",
+    "activeTasks": "Active Tasks",
+    "pendingTasks": "Pending Tasks",
+    "errorFetchingHealth": "Error fetching health info"
   }
 }

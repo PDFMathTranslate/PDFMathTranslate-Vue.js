@@ -60,6 +60,15 @@
     "ignoreCache": "Ignore Cache",
     "customSystemPrompt": "Custom System Prompt",
     "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "appearance": "외관",
+    "accentColor": "강조 색상",
+    "accentColors": {
+      "black": "블랙",
+      "sky": "스카이",
+      "lime": "라임",
+      "orange": "오렌지",
+      "pink": "핑크"
+    },
     "advanced": "Advanced",
     "translateTableText": "Translate Table Text",
     "skipScannedDetection": "Skip Scanned Detection",

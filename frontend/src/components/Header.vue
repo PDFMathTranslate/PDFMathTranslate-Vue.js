@@ -59,47 +59,39 @@ const toggleTheme = () => {
 
 <template>
   <header 
-    class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    class="sticky top-0 z-50 flex items-center justify-between px-6 pb-4 pt-[calc(1rem_+_env(safe-area-inset-top,0px))] border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
     :class="{ 'wco-header': isWco }"
   >
     <div class="flex items-center gap-2">
       <h1 v-if="!isWco" class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
-      <!-- <span class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</span> -->
-
     </div>
     <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWco }">
       <PWAInstallButton />
-      <TooltipProvider>
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <DropdownMenuTrigger as-child>
-                <Button variant="ghost" size="icon" id="language-menu-trigger">
-                  <div class="relative w-5 h-5 flex items-center justify-center">
-                    <Transition name="rotate-fade" mode="out-in">
-                      <Languages :key="locale" class="absolute h-5 w-5" />
-                    </Transition>
-                  </div>
-                  <span class="sr-only">{{ t('language.select') }}</span>
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ t('shortcuts.language') }} (⌘/Ctrl + L)</p>
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              v-for="lang in supportedLocales"
-              :key="lang.code"
-              :class="{ 'bg-accent': locale === lang.code }"
-              @click="changeLanguage(lang.code)"
-            >
-              {{ lang.native }}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="icon" id="language-menu-trigger">
+            <div class="relative w-5 h-5 flex items-center justify-center">
+              <Transition name="rotate-fade" mode="out-in">
+                <Languages :key="locale" class="absolute h-5 w-5" />
+              </Transition>
+            </div>
+            <span class="sr-only">{{ t('language.select') }}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="z-[100]">
+          <DropdownMenuItem
+            v-for="lang in supportedLocales"
+            :key="lang.code"
+            :class="{ 'bg-accent': locale === lang.code }"
+            @click="changeLanguage(lang.code)"
+          >
+            {{ lang.native }}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
+      <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
             <Button variant="ghost" size="icon" @click="toggleTheme">
@@ -138,6 +130,7 @@ const toggleTheme = () => {
 </template>
 
 <style scoped>
+/* stylelint-disable property-no-unknown */
 .rotate-fade-enter-active,
 .rotate-fade-leave-active {
   transition: all 0.2s ease;
@@ -184,17 +177,28 @@ const toggleTheme = () => {
   top: 0;
   left: env(titlebar-area-x, 0);
   width: env(titlebar-area-width, 100%);
-  height: env(titlebar-area-height, auto);
-  min-height: 3rem;
-  padding: 0.75rem 1rem;
+  height: env(titlebar-area-height, 3rem);
+  padding: 0 1rem;
   background: hsl(var(--background) / 0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid hsl(var(--border));
   -webkit-app-region: drag;
-  app-region: drag;
+  /* Reset standard header styles */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
-/* Ensure header is always visible even if env vars aren't set */
+.wco-header :deep(button),
+.wco-header :deep([role="menu"]),
+.wco-header :deep([data-reka-dropdown-menu-content]) {
+  -webkit-app-region: no-drag;
+}
+
+.app-no-drag,
+.app-no-drag * {
+  -webkit-app-region: no-drag;
+}
+
 @supports not (height: env(titlebar-area-height)) {
   .wco-header {
     position: sticky;
@@ -203,8 +207,5 @@ const toggleTheme = () => {
   }
 }
 
-.app-no-drag {
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
-}
+/* stylelint-enable property-no-unknown */
 </style>

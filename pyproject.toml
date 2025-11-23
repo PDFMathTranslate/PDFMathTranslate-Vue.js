@@ -46,6 +46,7 @@ dependencies = [
     "chardet>=5.2.0",
     "gradio-i18n==0.3.4", # since we have hooked it for language selection
     "pyyaml>=6.0.2",
+    "psutil>=6.1.1",
 ]
 
 [dependency-groups]

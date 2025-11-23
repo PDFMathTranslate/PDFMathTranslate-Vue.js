@@ -5,6 +5,8 @@ import os
 import asyncio
 from pathlib import Path
 from typing import Optional, List
+import psutil
+import time
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
@@ -914,6 +916,51 @@ async def get_config():
     except Exception as e:
         logger.error(f"Error getting config: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/health")
+async def get_health():
+    """Get server health information including CPU load and memory usage"""
+    try:
+        # Get CPU usage (percent over 0.1 seconds for faster response)
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        
+        # Get memory usage
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        memory_used_gb = memory.used / (1024 ** 3)
+        memory_total_gb = memory.total / (1024 ** 3)
+        
+        # Count active tasks
+        active_tasks = sum(1 for task in tasks.values() if task.get("status") == "processing")
+        total_tasks = len(tasks)
+        pending_tasks = sum(1 for task in tasks.values() if task.get("status") == "pending")
+        
+        # Determine server status
+        if active_tasks > 0:
+            status = "busy"
+        elif any(task.get("status") == "failed" for task in tasks.values()):
+            status = "error"
+        else:
+            status = "ready"
+        
+        return {
+            "status": status,
+            "cpu_percent": round(cpu_percent, 1),
+            "memory_percent": round(memory_percent, 1),
+            "memory_used_gb": round(memory_used_gb, 2),
+            "memory_total_gb": round(memory_total_gb, 2),
+            "active_tasks": active_tasks,
+            "pending_tasks": pending_tasks,
+            "total_tasks": total_tasks,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        logger.error(f"Error getting health info: {e}", exc_info=True)
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": time.time()
+        }
 
 async def run_server(host="0.0.0.0", port=8000):
     import uvicorn

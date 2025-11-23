@@ -14,6 +14,10 @@ const props = defineProps({
   status: {
     type: String,
     default: 'ready'
+  },
+  health: {
+    type: Object,
+    default: null
   }
 })
 
@@ -30,11 +34,27 @@ const statusColor = computed(() => {
 
 const statusTitle = computed(() => {
   switch (props.status) {
-    case 'busy': return 'Busy / Translating'
-    case 'error': return 'Error'
-    case 'ready': return 'Service found & communicatable'
-    default: return 'Unknown Status'
+    case 'busy': return t('service.status.busy')
+    case 'error': return t('service.status.error')
+    case 'ready': return t('service.status.ready')
+    default: return t('service.status.unknown')
   }
+})
+
+const cpuLoadColor = computed(() => {
+  if (!props.health || props.health.cpu_percent === undefined) return 'text-muted-foreground'
+  const cpu = props.health.cpu_percent
+  if (cpu < 50) return 'text-green-500'
+  if (cpu < 80) return 'text-yellow-500'
+  return 'text-red-500'
+})
+
+const memoryColor = computed(() => {
+  if (!props.health || props.health.memory_percent === undefined) return 'text-muted-foreground'
+  const memory = props.health.memory_percent
+  if (memory < 60) return 'text-green-500'
+  if (memory < 85) return 'text-yellow-500'
+  return 'text-red-500'
 })
 
 const showPreview = ref(false)
@@ -88,8 +108,35 @@ const hideShortcutsPopup = () => {
                 tabindex="0"
               ></div>
             </TooltipTrigger>
-            <TooltipContent side="top">
-              <p>{{ statusTitle }}</p>
+            <TooltipContent side="top" class="max-w-xs">
+              <div class="space-y-1.5">
+                <p class="font-semibold">{{ statusTitle }}</p>
+                <template v-if="health && !health.error">
+                  <div class="text-xs space-y-1 border-t pt-1.5 mt-1.5">
+                    <div class="flex justify-between items-center">
+                      <span class="text-muted-foreground">{{ t('service.cpu') }}:</span>
+                      <span :class="cpuLoadColor" class="font-mono">{{ health.cpu_percent }}%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-muted-foreground">{{ t('service.memory') }}:</span>
+                      <span :class="memoryColor" class="font-mono">
+                        {{ health.memory_percent }}% ({{ health.memory_used_gb }}/{{ health.memory_total_gb }} GB)
+                      </span>
+                    </div>
+                    <div v-if="health.active_tasks > 0" class="flex justify-between items-center">
+                      <span class="text-muted-foreground">{{ t('service.activeTasks') }}:</span>
+                      <span class="font-mono">{{ health.active_tasks }}</span>
+                    </div>
+                    <div v-if="health.pending_tasks > 0" class="flex justify-between items-center">
+                      <span class="text-muted-foreground">{{ t('service.pendingTasks') }}:</span>
+                      <span class="font-mono">{{ health.pending_tasks }}</span>
+                    </div>
+                  </div>
+                </template>
+                <p v-else-if="health && health.error" class="text-xs text-red-500">
+                  {{ t('service.errorFetchingHealth') }}
+                </p>
+              </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

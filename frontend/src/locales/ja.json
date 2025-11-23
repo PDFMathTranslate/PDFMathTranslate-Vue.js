@@ -62,6 +62,15 @@
     "ignoreCache": "Ignore Cache",
     "customSystemPrompt": "Custom System Prompt",
     "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "appearance": "外観",
+    "accentColor": "アクセントカラー",
+    "accentColors": {
+      "black": "ブラック",
+      "sky": "スカイ",
+      "lime": "ライム",
+      "orange": "オレンジ",
+      "pink": "ピンク"
+    },
     "advanced": "Advanced",
     "translateTableText": "Translate Table Text",
     "skipScannedDetection": "Skip Scanned Detection",

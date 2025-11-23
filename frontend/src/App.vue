@@ -55,9 +55,11 @@ const isLogsExpanded = ref(false)
 const overallProgress = ref(null)
 const isTranslationComplete = computed(() => taskStatus.value === 'completed')
 const serviceStatus = ref('ready') // ready, busy, error
+const healthInfo = ref(null) // Store health information including CPU load
 const showSettings = ref(false)
 const isSaved = ref(false)
 const isLanguageSwitching = ref(false)
+const openAccordionItem = ref('')
 
 // Preview URL for selected file
 const selectedFilePreviewUrl = ref(null)
@@ -83,25 +85,63 @@ onUnmounted(() => {
 
 const isWco = ref(false)
 
+let wcoMql = null
+let standaloneMql = null
+
 const checkWco = () => {
-  // Only enable WCO if:
-  // 1. The API exists
-  // 2. The overlay is actually visible
-  // 3. We're in a standalone PWA (not just a regular browser tab)
-  if ('windowControlsOverlay' in navigator && 
+  // Only enable WCO if we are in the correct display mode or the API reports it's visible
+  // 1. Check modern media query
+  const isWcoMode = window.matchMedia('(display-mode: window-controls-overlay)').matches
+  
+  // 2. Check if we are in standalone and the overlay is visible via API
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const isApiVisible = 'windowControlsOverlay' in navigator && 
       navigator.windowControlsOverlay && 
-      navigator.windowControlsOverlay.visible &&
-      window.matchMedia('(display-mode: standalone)').matches) {
+                       navigator.windowControlsOverlay.visible
+
+  if (isWcoMode || (isStandalone && isApiVisible)) {
     isWco.value = true
   } else {
     isWco.value = false
   }
 }
 
+// Health monitoring
+const healthPollInterval = ref(null)
+
+const fetchHealthInfo = async () => {
+  try {
+    const response = await api.getHealth()
+    healthInfo.value = response.data
+    if (response.data.status) {
+      serviceStatus.value = response.data.status
+    }
+  } catch (error) {
+    console.error('Failed to fetch health info:', error)
+    serviceStatus.value = 'error'
+    healthInfo.value = { status: 'error', error: error.message }
+  }
+}
+
 onMounted(async () => {
+  // Initialize WCO detection
   checkWco()
+  
   if ('windowControlsOverlay' in navigator) {
     navigator.windowControlsOverlay.addEventListener('geometrychange', checkWco)
+  }
+  
+  // Listen for display mode changes
+  wcoMql = window.matchMedia('(display-mode: window-controls-overlay)')
+  standaloneMql = window.matchMedia('(display-mode: standalone)')
+  
+  try {
+    wcoMql.addEventListener('change', checkWco)
+    standaloneMql.addEventListener('change', checkWco)
+  } catch (e) {
+    // Fallback for older browsers that use addListener
+    wcoMql.addListener(checkWco)
+    standaloneMql.addListener(checkWco)
   }
 
   try {
@@ -113,11 +153,36 @@ onMounted(async () => {
     console.error('Failed to load config:', error)
     serviceStatus.value = 'error'
   }
+
+  // Start health monitoring
+  fetchHealthInfo() // Initial fetch
+  healthPollInterval.value = setInterval(fetchHealthInfo, 2000) // Poll every 2 seconds
 })
 
 onUnmounted(() => {
   if ('windowControlsOverlay' in navigator) {
     navigator.windowControlsOverlay.removeEventListener('geometrychange', checkWco)
+  }
+  
+  // Clean up media query listeners
+  if (wcoMql) {
+    try {
+      wcoMql.removeEventListener('change', checkWco)
+    } catch (e) {
+      wcoMql.removeListener(checkWco)
+    }
+  }
+  if (standaloneMql) {
+    try {
+      standaloneMql.removeEventListener('change', checkWco)
+    } catch (e) {
+      standaloneMql.removeListener(checkWco)
+    }
+  }
+
+  // Clean up health polling
+  if (healthPollInterval.value) {
+    clearInterval(healthPollInterval.value)
   }
 })
 
@@ -162,6 +227,8 @@ const defaultPreferences = {
   minTextLength: undefined,
   ignoreCache: false,
   customSystemPrompt: undefined,
+  // Appearance
+  accentColor: 'black',
   // Advanced options
   translateTableText: false,
   skipScannedDetection: false,
@@ -173,6 +240,13 @@ const translationParams = reactive({
   ...defaultPreferences,
   ...(loadPreferences() || {}),
 })
+
+// Apply accent color dynamically
+watch(() => translationParams.accentColor, (newColor) => {
+  if (newColor) {
+    document.documentElement.setAttribute('data-accent', newColor)
+  }
+}, { immediate: true })
 
 // Save preferences to localStorage whenever they change
 let saveTimeout
@@ -568,6 +642,11 @@ const handleLanguageChange = (langCode) => {
   }, 200)
 }
 
+const handleOpenServiceSettings = () => {
+  showSettings.value = true
+  openAccordionItem.value = 'service'
+}
+
 // Keyboard Shortcuts
 onKeyStroke(['n', 'N', 'r', 'R'], (e) => {
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
@@ -619,7 +698,7 @@ onKeyStroke(['l', 'L'], (e) => {
     class="min-h-screen bg-background font-sans antialiased overflow-x-hidden transition-opacity duration-200 flex flex-col"
     :class="{ 'opacity-0': isLanguageSwitching, 'opacity-100': !isLanguageSwitching }"
   >
-    <Header v-if="!isWco" :show-settings="showSettings" :is-wco="isWco" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
+    <Header :show-settings="showSettings" :is-wco="isWco" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
     
     <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
@@ -664,7 +743,7 @@ onKeyStroke(['l', 'L'], (e) => {
               </div>
             </CardHeader>
             <CardContent>
-              <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" />
+              <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" @open-service-settings="handleOpenServiceSettings" />
             </CardContent>
           </Card>
           
@@ -865,14 +944,14 @@ onKeyStroke(['l', 'L'], (e) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ApplicationSettings v-model="translationParams" :config="config" />
+              <ApplicationSettings v-model="translationParams" :config="config" :open-accordion="openAccordionItem" />
             </CardContent>
           </Card>
         </div>
       </Transition>
     </main>
 
-    <ProjectInfo :status="serviceStatus" />
+    <ProjectInfo :status="serviceStatus" :health="healthInfo" />
   </div>
 </template>
 

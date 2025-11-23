@@ -6,7 +6,11 @@
   "fileSelector": {
     "clickToUpload": "拖拽或点击上传 PDF 文件",
     "dragAndDrop": "翻译将立即开始",
-    "subtitle": "翻译将立即开始"
+    "subtitle": "翻译将立即开始",
+    "currentService": "将使用",
+    "changeService": "更改服务",
+    "freeService": "免费服务赞助",
+    "devSponsor": "感谢开发赞助"
   },
   "translation": {
     "options": "翻译",
@@ -69,6 +73,15 @@
     "ignoreCache": "忽略缓存",
     "customSystemPrompt": "自定义系统提示词",
     "customSystemPromptPlaceholder": "用于翻译的自定义系统提示词",
+    "appearance": "外观",
+    "accentColor": "强调色",
+    "accentColors": {
+      "black": "黑色",
+      "sky": "天空蓝",
+      "lime": "柠檬绿",
+      "orange": "橙色",
+      "pink": "粉色"
+    },
     "advanced": "实验性功能",
     "translateTableText": "翻译表格文字",
     "skipScannedDetection": "跳过扫描检测",
@@ -108,5 +121,18 @@
   },
   "header": {
     "howDoesItWork": "它是如何工作的？"
+  },
+  "service": {
+    "status": {
+      "ready": "服务已连接",
+      "busy": "忙碌中 / 正在翻译",
+      "error": "错误",
+      "unknown": "未知状态"
+    },
+    "cpu": "CPU 负载",
+    "memory": "内存",
+    "activeTasks": "活动任务",
+    "pendingTasks": "待处理任务",
+    "errorFetchingHealth": "获取健康信息失败"
   }
 }

@@ -16,8 +16,8 @@
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 93%;
@@ -43,7 +43,7 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --accent: 0 0% 14%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -55,6 +55,72 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%
+  }
+
+  /* Accent Color Variants */
+  /* Black (Default - Slate) */
+  [data-accent="black"] {
+    --primary: 215.4 32.0% 26.9%;
+    --primary-foreground: 0 0% 98%;
+    --ring: 215.4 32.0% 26.9%;
+  }
+
+  [data-accent="black"].dark {
+    --primary: 215.4 32.0% 26.9%;
+    --primary-foreground: 0 0% 98%;
+    --ring: 215.4 32.0% 26.9%;
+  }
+
+  /* Sky */
+  [data-accent="sky"] {
+    --primary: 200.4 98.0% 39.4%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 200.4 98.0% 39.4%;
+  }
+
+  [data-accent="sky"].dark {
+    --primary: 200.4 98.0% 39.4%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 200.4 98.0% 39.4%;
+  }
+
+  /* Lime */
+  [data-accent="lime"] {
+    --primary: 84.4 81.0% 31.2%;
+    --primary-foreground: 0 0% 0%;
+    --ring: 84.4 81.0% 31.2%;
+  }
+
+  [data-accent="lime"].dark {
+    --primary: 84.4 81.0% 31.2%;
+    --primary-foreground: 0 0% 0%;
+    --ring: 84.4 81.0% 31.2%;
+  }
+
+  /* Orange */
+  [data-accent="orange"] {
+    --primary: 25.7 100.0% 44.9%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 25.7 100.0% 44.9%;
+  }
+
+  [data-accent="orange"].dark {
+    --primary: 25.7 100.0% 44.9%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 25.7 100.0% 44.9%;
+  }
+
+  /* Pink */
+  [data-accent="pink"] {
+    --primary: 327.4 73.5% 43.1%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 327.4 73.5% 43.1%;
+  }
+
+  [data-accent="pink"].dark {
+    --primary: 327.4 73.5% 43.1%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 327.4 73.5% 43.1%;
   }
 }
 
@@ -72,4 +138,10 @@
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 700ms;
+}
+
+/* Ensure dropdown portals remain interactive in WCO titlebar */
+[data-reka-dropdown-menu-content],
+[data-reka-dropdown-menu-content] * {
+  -webkit-app-region: no-drag;
 }

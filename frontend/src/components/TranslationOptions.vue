@@ -18,7 +18,7 @@ const props = defineProps({
 
 const model = defineModel()
 
-const emit = defineEmits(['file-selected'])
+const emit = defineEmits(['file-selected', 'open-service-settings'])
 
 // Computed properties for languages to ensure stable order if needed
 const languages = computed(() => {
@@ -218,7 +218,7 @@ onMounted(() => {
     <FileSelector 
       v-model:source="model.source" 
       v-model:url="model.url" 
-      @file-selected="handleFileSelected" 
+      @file-selected="handleFileSelected"
     />
 
     <div class="flex items-end gap-2">
@@ -284,6 +284,56 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Service Info -->
+    <div v-if="service" class="pt-0 ">
+
+      <p v-if="service !== 'SiliconFlowFree'" class="text-xs text-muted-foreground text-center text-muted-foreground">
+        {{ t('fileSelector.currentService') }} <span class="font-medium  text-muted-foreground">{{ service }}</span>
+        · 
+        <a 
+          href="#"
+          @click.prevent="emit('open-service-settings')"
+          class=" text-primary hover:underline focus:outline-none focus:underline"
+        >
+          {{ t('fileSelector.changeService') }}
+        </a>
+      </p>
+
+      
+      <p v-if="service !== 'SiliconFlowFree'" class="text-xs text-muted-foreground text-center text-muted-foreground">
+        {{ t('fileSelector.currentService') }} <span class="font-medium  text-muted-foreground">{{ service }}</span>
+        · 
+        <a 
+          href="#"
+          @click.prevent="emit('open-service-settings')"
+          class=" text-primary hover:underline focus:outline-none focus:underline"
+        >
+          {{ t('fileSelector.changeService') }}
+        </a>
+      </p>
+      <p v-if="service === 'SiliconFlowFree'" class="text-xs text-muted-foreground text-center text-muted-foreground">
+        {{ t('fileSelector.currentService') }}{{ t('fileSelector.freeService') }} <span class="font-medium  text-muted-foreground">
+        <a 
+          href="https://www.siliconflow.com/" 
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary hover:underline focus:outline-none focus:underline"
+        >
+          Silicon Flow
+        </a></span>
+        · 
+        <a 
+          href="#"
+          @click.prevent="emit('open-service-settings')"
+          class=" text-primary hover:underline focus:outline-none focus:underline"
+        >
+          {{ t('fileSelector.changeService') }}
+        </a>
+      </p>
+      <p class="text-xs text-muted-foreground text-center text-muted-foreground">
+      {{ t('fileSelector.devSponsor') }} <a href="https://go.warp.dev/PDFMathTranslate" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline focus:outline-none focus:underline">Warp.dev</a>
+        </p>
+    </div>
     
     <!-- Advanced Options Accordion or Toggle could go here -->
   </div>

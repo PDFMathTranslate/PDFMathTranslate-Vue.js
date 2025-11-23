@@ -39,6 +39,9 @@ export default {
     getConfig() {
         return apiClient.get('/config');
     },
+    getHealth() {
+        return apiClient.get('/health');
+    },
     downloadTaskResult(taskId) {
         return apiClient.get(`/download_task/${taskId}`, { responseType: 'blob' });
     },

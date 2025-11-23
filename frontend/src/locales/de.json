@@ -60,6 +60,15 @@
     "ignoreCache": "Ignore Cache",
     "customSystemPrompt": "Custom System Prompt",
     "customSystemPromptPlaceholder": "Custom system prompt for translation",
+    "appearance": "Erscheinungsbild",
+    "accentColor": "Akzentfarbe",
+    "accentColors": {
+      "black": "Schwarz",
+      "sky": "Himmelblau",
+      "lime": "Limette",
+      "orange": "Orange",
+      "pink": "Rosa"
+    },
     "advanced": "Advanced",
     "translateTableText": "Translate Table Text",
     "skipScannedDetection": "Skip Scanned Detection",

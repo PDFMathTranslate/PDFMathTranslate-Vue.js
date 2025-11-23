@@ -63,6 +63,15 @@
     "ignoreCache": "忽略快取",
     "customSystemPrompt": "自訂系統提示詞",
     "customSystemPromptPlaceholder": "用於翻譯的自訂系統提示詞",
+    "appearance": "外觀",
+    "accentColor": "強調色",
+    "accentColors": {
+      "black": "黑色",
+      "sky": "天空藍",
+      "lime": "檸檬綠",
+      "orange": "橙色",
+      "pink": "粉色"
+    },
     "advanced": "進階",
     "translateTableText": "翻譯表格文字",
     "skipScannedDetection": "跳過掃描檢測",
