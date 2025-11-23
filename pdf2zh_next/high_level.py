@@ -606,6 +606,20 @@ def create_babeldoc_config(settings: SettingsModel, file: Path) -> BabelDOCConfi
     return babeldoc_config
 
 
+def _rename_stage_in_event(event: dict):
+    target = "Parse PDF and Create Intermediate Representation"
+    replacement = "Detecting layouts"
+    
+    if event.get("stage") == target:
+        event["stage"] = replacement
+        
+    if event.get("type") == "stage_summary":
+        for stage in event.get("stages", []):
+            if stage.get("name") == target:
+                stage["name"] = replacement
+    return event
+
+
 async def do_translate_async_stream(
     settings: SettingsModel, file: Path | str
 ) -> AsyncGenerator[dict, None]:
@@ -635,6 +649,7 @@ async def do_translate_async_stream(
 
     try:
         async for event in translate_func():
+            _rename_stage_in_event(event)
             yield event
             if settings.basic.debug:
                 logger.debug(event)

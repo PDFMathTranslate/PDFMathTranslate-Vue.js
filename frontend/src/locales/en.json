@@ -21,7 +21,10 @@
     "service": "Service",
     "selectService": "Select service",
     "startTranslation": "Start Translation",
+    "starting": "Starting...",
     "translating": "Translating...",
+    "stop": "Stop",
+    "stoppedByUser": "Stopped by user",
     "originalFilePreview": "Original File Preview",
     "download": "Download Translated PDF",
     "result": "Translation Result",
@@ -32,7 +35,7 @@
   },
   "settings": {
     "title": "Settings",
-    "outputPreference": "Output Preference",
+    "outputPreference": "Output",
     "monoOnly": "Translated",
     "dualTranslateFirst": "Prioritize Translation",
     "alternatingPages": "Vertical",
@@ -46,23 +49,23 @@
     "termQpsPlaceholder": "QPS limit for term extraction translation service",
     "termPoolMaxWorkers": "Term Pool Max Workers",
     "termPoolMaxWorkersPlaceholder": "Maximum number of workers for term extraction pool",
-    "pdfProcessing": "PDF Processing",
+    "pdfProcessing": "Page",
     "pages": "Pages",
     "pagesPlaceholder": "Pages to translate (e.g. '1,2,1-,-3,3-5')",
-    "watermarkOutputMode": "Watermark Output Mode",
+    "watermarkOutputMode": "Watermark",
     "watermarked": "Watermarked",
     "noWatermark": "No Watermark",
     "both": "Both",
     "maxPagesPerPart": "Max Pages Per Part",
     "maxPagesPerPartPlaceholder": "Maximum pages per part for split translation",
-    "translationOptions": "Translation Options",
+    "translationOptions": "Text",
     "minTextLength": "Min Text Length",
     "minTextLengthPlaceholder": "Minimum text length to translate",
     "ignoreCache": "Ignore Cache",
     "customSystemPrompt": "Custom System Prompt",
     "customSystemPromptPlaceholder": "Custom system prompt for translation",
-    "advanced": "Advanced",
-    "translateTableText": "Translate Table Text",
+    "advanced": "Experimental Features",
+    "translateTableText": "Translate Table",
     "skipScannedDetection": "Skip Scanned Detection",
     "ocrWorkaround": "OCR Workaround",
     "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
@@ -87,6 +90,14 @@
   },
   "pwa": {
     "install": "Install App"
+  },
+  "shortcuts": {
+    "language": "Switch Language",
+    "theme": "Toggle Dark Mode",
+    "settings": "Toggle Settings",
+    "closeSettings": "Close Settings",
+    "stop": "Stop Translation",
+    "new": "Start New Translation"
   },
   "header": {
     "howDoesItWork": "How does it work?"

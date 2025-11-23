@@ -206,18 +206,73 @@ const autoEnableOcrWorkaround = computed({
           </div>
         </AccordionContent>
       </AccordionItem>
+
+      <AccordionItem value="pdf-processing">
+        <AccordionTrigger>{{ t('settings.pdfProcessing') }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="space-y-2">
+            <Label for="watermark-output-mode">{{ t('settings.watermarkOutputMode') }}</Label>
+            <Select v-model="watermarkOutputMode">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="watermarked">{{ t('settings.watermarked') }}</SelectItem>
+                <SelectItem value="no_watermark">{{ t('settings.noWatermark') }}</SelectItem>
+                <SelectItem value="both">{{ t('settings.both') }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="space-y-2">
+            <Label for="pages">{{ t('settings.pages') }}</Label>
+            <Input 
+              id="pages" 
+              v-model="pages" 
+              :placeholder="t('settings.pagesPlaceholder')"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="max-pages-per-part">{{ t('settings.maxPagesPerPart') }}</Label>
+            <Input 
+              id="max-pages-per-part" 
+              v-model="maxPagesPerPart" 
+              type="number" 
+              :placeholder="t('settings.maxPagesPerPartPlaceholder')"
+            />
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="translation">
+        <AccordionTrigger>{{ t('settings.translationOptions') }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="flex items-center justify-between">
+            <Label for="ignore-cache">{{ t('settings.ignoreCache') }}</Label>
+            <Switch id="ignore-cache" v-model="ignoreCache" />
+          </div>
+          <div class="space-y-2">
+            <Label for="min-text-length">{{ t('settings.minTextLength') }}</Label>
+            <Input 
+              id="min-text-length" 
+              v-model="minTextLength" 
+              type="number" 
+              :placeholder="t('settings.minTextLengthPlaceholder')"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="custom-system-prompt">{{ t('settings.customSystemPrompt') }}</Label>
+            <Input 
+              id="custom-system-prompt" 
+              v-model="customSystemPrompt" 
+              :placeholder="t('settings.customSystemPromptPlaceholder')"
+            />
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
       <AccordionItem value="rate-limiting">
         <AccordionTrigger>{{ t('settings.rateLimiting') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
-          <div class="space-y-2">
-            <Label for="qps">{{ t('settings.qps') }}</Label>
-            <Input 
-              id="qps" 
-              v-model="qps" 
-              type="number" 
-              :placeholder="t('settings.qpsPlaceholder')"
-            />
-          </div>
           <div class="space-y-2">
             <Label for="pool-max-workers">{{ t('settings.poolMaxWorkers') }}</Label>
             <Input 
@@ -225,6 +280,15 @@ const autoEnableOcrWorkaround = computed({
               v-model="poolMaxWorkers" 
               type="number" 
               :placeholder="t('settings.poolMaxWorkersPlaceholder')"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="qps">{{ t('settings.qps') }}</Label>
+            <Input 
+              id="qps" 
+              v-model="qps" 
+              type="number" 
+              :placeholder="t('settings.qpsPlaceholder')"
             />
           </div>
           <div class="space-y-2">
@@ -247,70 +311,6 @@ const autoEnableOcrWorkaround = computed({
           </div>
         </AccordionContent>
       </AccordionItem>
-
-      <AccordionItem value="pdf-processing">
-        <AccordionTrigger>{{ t('settings.pdfProcessing') }}</AccordionTrigger>
-        <AccordionContent class="space-y-4 pt-2">
-          <div class="space-y-2">
-            <Label for="pages">{{ t('settings.pages') }}</Label>
-            <Input 
-              id="pages" 
-              v-model="pages" 
-              :placeholder="t('settings.pagesPlaceholder')"
-            />
-          </div>
-          <div class="space-y-2">
-            <Label for="watermark-output-mode">{{ t('settings.watermarkOutputMode') }}</Label>
-            <Select v-model="watermarkOutputMode">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="watermarked">{{ t('settings.watermarked') }}</SelectItem>
-                <SelectItem value="no_watermark">{{ t('settings.noWatermark') }}</SelectItem>
-                <SelectItem value="both">{{ t('settings.both') }}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div class="space-y-2">
-            <Label for="max-pages-per-part">{{ t('settings.maxPagesPerPart') }}</Label>
-            <Input 
-              id="max-pages-per-part" 
-              v-model="maxPagesPerPart" 
-              type="number" 
-              :placeholder="t('settings.maxPagesPerPartPlaceholder')"
-            />
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="translation">
-        <AccordionTrigger>{{ t('settings.translationOptions') }}</AccordionTrigger>
-        <AccordionContent class="space-y-4 pt-2">
-          <div class="space-y-2">
-            <Label for="min-text-length">{{ t('settings.minTextLength') }}</Label>
-            <Input 
-              id="min-text-length" 
-              v-model="minTextLength" 
-              type="number" 
-              :placeholder="t('settings.minTextLengthPlaceholder')"
-            />
-          </div>
-          <div class="flex items-center justify-between">
-            <Label for="ignore-cache">{{ t('settings.ignoreCache') }}</Label>
-            <Switch id="ignore-cache" v-model="ignoreCache" />
-          </div>
-          <div class="space-y-2">
-            <Label for="custom-system-prompt">{{ t('settings.customSystemPrompt') }}</Label>
-            <Input 
-              id="custom-system-prompt" 
-              v-model="customSystemPrompt" 
-              :placeholder="t('settings.customSystemPromptPlaceholder')"
-            />
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-
       <AccordionItem value="advanced">
         <AccordionTrigger>{{ t('settings.advanced') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">

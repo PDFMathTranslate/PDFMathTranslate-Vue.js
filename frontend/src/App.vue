@@ -10,10 +10,16 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
-import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check } from 'lucide-vue-next'
+import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
-import { useColorMode } from '@vueuse/core'
+import { useColorMode, onKeyStroke } from '@vueuse/core'
 
 const { t, locale } = useI18n()
 
@@ -35,6 +41,12 @@ const taskId = ref(null)
 const taskStatus = ref(null)
 const logs = ref([])
 const stages = ref([])
+const activeStageIndex = computed(() => {
+  const index = stages.value.findIndex(s => s.status === 'active')
+  if (index !== -1) return index
+  if (stages.value.length > 0 && stages.value.every(s => s.status === 'completed')) return stages.value.length - 1
+  return 0
+})
 const currentStage = ref(null)
 const downloadUrl = ref(null)
 const monoPdfUrl = ref(null)
@@ -135,7 +147,7 @@ const defaultPreferences = {
   termPoolMaxWorkers: undefined,
   // PDF processing
   pages: undefined,
-  watermarkOutputMode: 'both',
+  watermarkOutputMode: 'no_watermark',
   maxPagesPerPart: undefined,
   // Translation options
   minTextLength: undefined,
@@ -403,7 +415,9 @@ const startTranslation = async () => {
     console.error('Translation failed:', error)
     isTranslating.value = false
     serviceStatus.value = 'error'
+    taskStatus.value = 'failed'
     logs.value.push(`Error: ${error.message}`)
+    isLogsExpanded.value = true
   }
 }
 
@@ -430,11 +444,22 @@ const pollStatus = async () => {
       if (!monoPdfUrl.value && !dualPdfUrl.value) {
         downloadUrl.value = `/api/download_task/${taskId.value}`
       }
+
+      // Automatically download files
+      if (monoPdfUrl.value) {
+        downloadMono()
+      }
+      if (dualPdfUrl.value) {
+        setTimeout(() => {
+          downloadDual()
+        }, 1000)
+      }
     } else if (taskStatus.value === 'failed') {
       isTranslating.value = false
       serviceStatus.value = 'error'
       overallProgress.value = null
       logs.value.push(`Error: ${response.data.error}`)
+      isLogsExpanded.value = true
     } else {
       setTimeout(pollStatus, 1000)
     }
@@ -457,6 +482,22 @@ const resetTranslation = () => {
   monoPdfUrl.value = null
   dualPdfUrl.value = null
   selectedFile.value = null
+}
+
+const stopTranslation = async () => {
+  if (!taskId.value) return
+  
+  try {
+    await api.cancelTranslation(taskId.value)
+    // Immediate feedback
+    isTranslating.value = false
+    logs.value.push(t('translation.stoppedByUser') || 'Stopped by user')
+    // Delay slightly to let the user see it stopped? 
+    // Or just reset immediately as requested "go back to the main file selector"
+    resetTranslation()
+  } catch (error) {
+    console.error('Failed to stop translation:', error)
+  }
 }
 
 const handleDownload = async (downloadFn) => {
@@ -517,6 +558,51 @@ const handleLanguageChange = (langCode) => {
     }, 50)
   }, 200)
 }
+
+// Keyboard Shortcuts
+onKeyStroke(['n', 'N', 'r', 'R'], (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    if (isTranslating.value || taskId.value) {
+      stopTranslation()
+    } else {
+      resetTranslation()
+    }
+  }
+})
+
+onKeyStroke([',', 'p', 'P'], (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    showSettings.value = !showSettings.value
+  }
+})
+
+onKeyStroke(['d', 'D'], (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
+  }
+})
+
+onKeyStroke('Escape', (e) => {
+  // Don't toggle if an input is focused
+  const target = e.target
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
+  
+  // Optional: Check if a dropdown is open (heuristic)
+  if (document.querySelector('[role="menu"]')) return
+
+  e.preventDefault()
+  showSettings.value = !showSettings.value
+})
+
+onKeyStroke(['l', 'L'], (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    document.getElementById('language-menu-trigger')?.click()
+  }
+})
 </script>
 
 <template>
@@ -540,42 +626,88 @@ const handleLanguageChange = (langCode) => {
             </CardContent>
           </Card>
           
-          <!-- Progress Box - Show during translation -->
-          <Card v-if="isTranslating || (overallProgress !== null && !isTranslationComplete)">
+          <!-- Progress Box - Show during translation or failure -->
+          <Card v-if="isTranslating || (overallProgress !== null && !isTranslationComplete) || taskStatus === 'failed'">
             <CardHeader>
-              <CardTitle class="flex items-center gap-2">
-                <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
-                {{ currentStage || t('translation.translating') }}
+              <CardTitle class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
+                  {{ currentStage || t('translation.starting') }}
+                </div>
+                <TooltipProvider v-if="isTranslating">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        class="h-8"
+                        @click="stopTranslation"
+                      >
+                        <Square class="w-4 h-4 mr-2" fill="currentColor" />
+                        {{ t('translation.stop') }}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{{ t('shortcuts.stop') }} (⌘/Ctrl + N / R)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardTitle>
               <CardDescription v-if="overallProgress !== null">
                 {{ overallProgress.toFixed(1) }}% {{ t('translation.complete') || 'complete' }}
               </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
+              <div v-if="taskStatus === 'failed'" class="flex flex-col sm:flex-row items-center gap-4 p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive">
+                 <div class="flex-1 font-medium flex items-center gap-2">
+                   <AlertCircle class="h-5 w-5" />
+                   {{ t('translation.failed') || 'Translation Failed' }}
+                 </div>
+                 <div class="flex gap-2 w-full sm:w-auto">
+                    <Button variant="default" size="sm" @click="startTranslation" class="flex-1 sm:flex-none">
+                      <RefreshCw class="w-4 h-4 mr-2" />
+                      {{ t('translation.retry') || 'Retry' }}
+                    </Button>
+                    <Button variant="outline" size="sm" @click="resetTranslation" class="flex-1 sm:flex-none bg-background hover:bg-accent text-foreground border-input">
+                      {{ t('translation.startNew') || 'Start New' }}
+                    </Button>
+                 </div>
+              </div>
+
               <div class="space-y-2">
                   <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
               </div>
               
               <!-- Stages List -->
-              <div v-if="stages.length > 0" class="space-y-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div v-for="(stage, index) in stages" :key="index" class="flex items-center gap-2 text-sm p-2 rounded hover:bg-muted/50 transition-colors">
-                   <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                     <Check v-if="stage.status === 'completed'" class="h-4 w-4 text-green-500" />
-                     <Loader2 v-else-if="stage.status === 'active'" class="h-4 w-4 animate-spin text-blue-500" />
-                     <div v-else class="h-2 w-2 rounded-full bg-muted-foreground/30"></div>
-                   </div>
-                   <span :class="{
-                     'text-foreground font-medium': stage.status === 'active',
-                     'text-muted-foreground': stage.status === 'pending',
-                     'text-green-600': stage.status === 'completed'
-                   }">{{ stage.name }}</span>
+              <div v-if="stages.length > 0" class="mt-4 h-9 overflow-hidden relative">
+                <div 
+                  class="transition-transform duration-500 ease-in-out absolute h-full top-0 left-0 flex gap-2"
+                  :style="{ transform: `translateX(-${activeStageIndex * 12.5}rem)` }"
+                >
+                  <div 
+                    v-for="(stage, index) in stages" 
+                    :key="index" 
+                    class="flex items-center gap-2 text-sm px-3 rounded-md transition-colors w-48 flex-shrink-0 border"
+                    :class="{
+                      'bg-green-100 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400': stage.status === 'completed',
+                      'bg-background border-primary text-foreground ring-1 ring-primary/20': stage.status === 'active',
+                      'bg-muted/50 border-transparent text-muted-foreground': stage.status === 'pending'
+                    }"
+                  >
+                     <div class="flex-shrink-0 w-4 h-4 flex items-center justify-center">
+                       <Check v-if="stage.status === 'completed'" class="h-3.5 w-3.5" />
+                       <Loader2 v-else-if="stage.status === 'active'" class="h-3.5 w-3.5 animate-spin text-primary" />
+                       <div v-else class="h-1.5 w-1.5 rounded-full bg-muted-foreground/30"></div>
+                     </div>
+                     <span class="truncate font-medium">{{ stage.name }}</span>
+                  </div>
                 </div>
               </div>
 
               <!-- Original File Preview -->
               <div v-if="selectedFilePreviewUrl" class="space-y-2">
-                  <p class="text-sm text-muted-foreground">{{ t('translation.originalFilePreview') }}</p>
-                  <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container">
+                  <!-- <p class="text-sm text-muted-foreground">{{ t('translation.originalFilePreview') }}</p> -->
+                  <div class="border rounded-lg overflow-hidden p-4 pdf-preview-container">
                       <VuePdfEmbed 
                           :source="selectedFilePreviewUrl"
                           class="w-full"
@@ -639,14 +771,23 @@ const handleLanguageChange = (langCode) => {
                   {{ t('translation.download') }}
                 </Button>
                 
-                <Button 
-                  variant="secondary" 
-                  @click="resetTranslation"
-                  class="flex items-center gap-2"
-                >
-                  <RefreshCw class="h-4 w-4" />
-                  {{ t('translation.restart') || 'Start New Translation' }}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button 
+                        variant="secondary" 
+                        @click="resetTranslation"
+                        class="flex items-center gap-2"
+                      >
+                        <RefreshCw class="h-4 w-4" />
+                        {{ t('translation.restart') || 'Start New Translation' }}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{{ t('shortcuts.new') }} (⌘/Ctrl + N / R)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               <!-- PDF Preview - Show first page of mono PDF -->

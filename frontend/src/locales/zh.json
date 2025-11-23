@@ -21,7 +21,10 @@
     "service": "服务",
     "selectService": "选择服务",
     "startTranslation": "开始翻译",
+    "starting": "启动中...",
     "translating": "翻译中...",
+    "stop": "停止",
+    "stoppedByUser": "用户已停止",
     "originalFilePreview": "原文件预览",
     "download": "下载翻译后的PDF",
     "result": "翻译结果",
@@ -46,26 +49,26 @@
     "termQpsPlaceholder": "术语提取翻译服务的QPS限制",
     "termPoolMaxWorkers": "术语最大工作线程数",
     "termPoolMaxWorkersPlaceholder": "术语提取池的最大工作线程数",
-    "pdfProcessing": "PDF处理",
+    "pdfProcessing": "页面处理",
     "pages": "页面",
     "pagesPlaceholder": "要翻译的页面 (例如 '1,2,1-,-3,3-5')",
-    "watermarkOutputMode": "水印输出模式",
+    "watermarkOutputMode": "水印输出",
     "watermarked": "有水印",
     "noWatermark": "无水印",
     "both": "两者",
     "maxPagesPerPart": "每部分最大页数",
     "maxPagesPerPartPlaceholder": "分割翻译的每部分最大页数",
-    "translationOptions": "翻译选项",
+    "translationOptions": "文本选项",
     "minTextLength": "最小文本长度",
     "minTextLengthPlaceholder": "翻译的最小文本长度",
     "ignoreCache": "忽略缓存",
     "customSystemPrompt": "自定义系统提示词",
     "customSystemPromptPlaceholder": "用于翻译的自定义系统提示词",
-    "advanced": "高级",
+    "advanced": "实验性功能",
     "translateTableText": "翻译表格文字",
     "skipScannedDetection": "跳过扫描检测",
-    "ocrWorkaround": "OCR 变通方案",
-    "autoEnableOcrWorkaround": "自动启用 OCR 变通方案"
+    "ocrWorkaround": "使用字符识别方案",
+    "autoEnableOcrWorkaround": "自动启用字符识别方案"
   },
   "language": {
     "select": "选择语言",
@@ -87,6 +90,14 @@
   },
   "pwa": {
     "install": "安装应用"
+  },
+  "shortcuts": {
+    "language": "切换语言",
+    "theme": "切换夜间模式",
+    "settings": "打开设置",
+    "closeSettings": "关闭设置",
+    "stop": "停止翻译",
+    "new": "开始新翻译"
   },
   "header": {
     "howDoesItWork": "它是如何工作的？"

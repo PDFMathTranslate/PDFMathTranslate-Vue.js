@@ -2,6 +2,7 @@ import logging
 import shutil
 import uuid
 import os
+import asyncio
 from pathlib import Path
 from typing import Optional, List
 
@@ -66,7 +67,7 @@ async def start_translation(
     lang_from: str = Form(...),
     lang_to: str = Form(...),
     service: str = Form(...),
-    background_tasks: BackgroundTasks = None
+    # background_tasks: BackgroundTasks = None # No longer using background_tasks for this
 ):
     task_id = str(uuid.uuid4())
     tasks[task_id] = {"status": "pending", "logs": []}
@@ -80,10 +81,32 @@ async def start_translation(
     file_path = files[0]
     logger.info(f"Task {task_id}: Found file {file_path.name}")
 
-    # Start background task
-    background_tasks.add_task(run_translation, task_id, file_path, lang_from, lang_to, service)
+    # Start task using asyncio.create_task instead of BackgroundTasks
+    # This allows us to store the task object and cancel it later
+    task = asyncio.create_task(run_translation(task_id, file_path, lang_from, lang_to, service))
+    tasks[task_id]["task_object"] = task
     
     return {"task_id": task_id}
+
+@app.post("/api/cancel/{task_id}")
+async def cancel_task(task_id: str):
+    if task_id not in tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task_info = tasks[task_id]
+    if task_info["status"] in ["completed", "failed", "cancelled"]:
+        return {"status": task_info["status"], "message": "Task already finished"}
+    
+    if "task_object" in task_info:
+        task_obj = task_info["task_object"]
+        if not task_obj.done():
+            task_obj.cancel()
+            logger.info(f"Task {task_id}: Cancel requested")
+            task_info["status"] = "cancelled"
+            task_info["logs"].append("Task cancelled by user")
+            return {"status": "cancelled"}
+    
+    return {"status": task_info.get("status", "unknown"), "message": "Could not cancel task"}
 
 # ... (imports)
 from pdf2zh_next.config.model import SettingsModel
@@ -342,7 +365,7 @@ def _build_translate_settings(
     translate_settings = base_settings.clone()
     original_output = translate_settings.translation.output
     original_pages = translate_settings.pdf.pages
-    original_gui_settings = config_manager.config_cli_settings.gui_settings
+    original_gui_settings = base_settings.gui_settings
 
     # Extract UI values
     service = ui_inputs.get("service")
@@ -785,6 +808,11 @@ async def run_translation(task_id, file_path, lang_from, lang_to, service):
                     output_file = max(matching_files, key=lambda p: p.stat().st_mtime)
                     tasks[task_id]["mono_pdf_path"] = str(output_file)
 
+    except asyncio.CancelledError:
+        logger.info(f"Task {task_id}: Translation cancelled")
+        tasks[task_id]["status"] = "cancelled"
+        tasks[task_id]["logs"].append("Translation cancelled by user")
+        # No need to re-raise, as we are the top-level task handler for this background op
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Task {task_id}: Translation failed: {error_msg}")
@@ -797,7 +825,12 @@ async def run_translation(task_id, file_path, lang_from, lang_to, service):
 async def get_status(task_id: str):
     if task_id not in tasks:
         raise HTTPException(status_code=404, detail="Task not found")
-    return tasks[task_id]
+    
+    # Return a copy without internal objects
+    status_data = tasks[task_id].copy()
+    if "task_object" in status_data:
+        del status_data["task_object"]
+    return status_data
 
 @app.get("/api/download/{file_id}")
 async def download_file(file_id: str):

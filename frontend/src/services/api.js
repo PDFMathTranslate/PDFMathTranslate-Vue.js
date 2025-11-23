@@ -33,6 +33,9 @@ export default {
     getStatus(taskId) {
         return apiClient.get(`/status/${taskId}`);
     },
+    cancelTranslation(taskId) {
+        return apiClient.post(`/cancel/${taskId}`);
+    },
     getConfig() {
         return apiClient.get('/config');
     },

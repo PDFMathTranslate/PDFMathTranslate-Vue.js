@@ -11,6 +11,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 const props = defineProps({
   showSettings: {
     type: Boolean,
@@ -63,45 +69,70 @@ const toggleTheme = () => {
     </div>
     <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWCO }">
       <PWAInstallButton />
-      <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-          <Button variant="ghost" size="icon">
-            <div class="relative w-5 h-5 flex items-center justify-center">
-              <Transition name="rotate-fade" mode="out-in">
-                <Languages :key="locale" class="absolute h-5 w-5" />
-              </Transition>
-            </div>
-            <span class="sr-only">{{ t('language.select') }}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            v-for="lang in supportedLocales"
-            :key="lang.code"
-            :class="{ 'bg-accent': locale === lang.code }"
-            @click="changeLanguage(lang.code)"
-          >
-            {{ lang.native }}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Button variant="ghost" size="icon" @click="toggleTheme">
-        <div class="relative w-5 h-5 flex items-center justify-center">
-          <Transition name="rotate-fade">
-            <Sun v-if="colorMode === 'light'" class="absolute h-5 w-5 theme-icon-sun" />
-            <Moon v-else class="absolute h-5 w-5 theme-icon-moon" />
-          </Transition>
-        </div>
-      </Button>
-      <Button variant="ghost" size="icon" @click="emit('toggle-settings')">
-        <div class="relative w-5 h-5 flex items-center justify-center">
-          <Transition name="rotate-fade">
-            <Settings v-if="!showSettings" class="absolute h-5 w-5 settings-icon" />
-            <X v-else class="absolute h-5 w-5 close-icon" />
-          </Transition>
-        </div>
-        <span class="sr-only">{{ showSettings ? t('common.close') : t('settings.title') }}</span>
-      </Button>
+      <TooltipProvider>
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <DropdownMenuTrigger as-child>
+                <Button variant="ghost" size="icon" id="language-menu-trigger">
+                  <div class="relative w-5 h-5 flex items-center justify-center">
+                    <Transition name="rotate-fade" mode="out-in">
+                      <Languages :key="locale" class="absolute h-5 w-5" />
+                    </Transition>
+                  </div>
+                  <span class="sr-only">{{ t('language.select') }}</span>
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{{ t('shortcuts.language') }} (⌘/Ctrl + L)</p>
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              v-for="lang in supportedLocales"
+              :key="lang.code"
+              :class="{ 'bg-accent': locale === lang.code }"
+              @click="changeLanguage(lang.code)"
+            >
+              {{ lang.native }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button variant="ghost" size="icon" @click="toggleTheme">
+              <div class="relative w-5 h-5 flex items-center justify-center">
+                <Transition name="rotate-fade">
+                  <Sun v-if="colorMode === 'light'" class="absolute h-5 w-5 theme-icon-sun" />
+                  <Moon v-else class="absolute h-5 w-5 theme-icon-moon" />
+                </Transition>
+              </div>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{{ t('shortcuts.theme') }} (⌘/Ctrl + D)</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button variant="ghost" size="icon" @click="emit('toggle-settings')">
+              <div class="relative w-5 h-5 flex items-center justify-center">
+                <Transition name="rotate-fade">
+                  <Settings v-if="!showSettings" class="absolute h-5 w-5 settings-icon" />
+                  <X v-else class="absolute h-5 w-5 close-icon" />
+                </Transition>
+              </div>
+              <span class="sr-only">{{ showSettings ? t('common.close') : t('settings.title') }}</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{{ showSettings ? t('shortcuts.closeSettings') + ' (Esc)' : t('shortcuts.settings') + ' (⌘/Ctrl + ,)' }}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   </header>
 </template>

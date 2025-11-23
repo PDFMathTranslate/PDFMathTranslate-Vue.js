@@ -22,6 +22,8 @@
     "selectService": "サービスを選択",
     "startTranslation": "翻訳を開始",
     "translating": "翻訳中...",
+    "stop": "停止",
+    "stoppedByUser": "ユーザーにより停止されました",
     "download": "翻訳済みPDFをダウンロード",
     "result": "Translation Result",
     "resultDescription": "Preview and download your translated PDF",
