@@ -163,6 +163,9 @@ const autoEnableOcrWorkaround = computed({
 </script>
 
 <template>
+  <!-- <div class="mt-2">
+    <p class="text-sm text-gray-500"> Settings will be automatically saved. </p>
+  </div> -->
   <div class="space-y-6">
     <Accordion type="single" collapsible class="w-full" defaultValue="output-preference">
       <AccordionItem value="output-preference">
@@ -174,8 +177,8 @@ const autoEnableOcrWorkaround = computed({
               :class="{ 'bg-accent border-primary': !bilingual && !alternatingPages }"
               @click="() => { bilingual = false; alternatingPages = false }"
             >
-              <img src="@/assets/icons/trans-only.png" class="w-12 h-12" />
-              <span class="text-sm font-medium">{{ t('settings.mono') }}</span>
+              <img src="@/assets/icons/trans-only.png" class="w-12" />
+              <span class="text-sm font-medium">{{ t('settings.monoOnly') }}</span>
             </div>
 
             <div 
@@ -183,7 +186,7 @@ const autoEnableOcrWorkaround = computed({
               :class="{ 'bg-accent border-primary': bilingual && !alternatingPages }"
               @click="() => { bilingual = true; alternatingPages = false }"
             >
-              <img src="@/assets/icons/compare-hor.png" class="w-12 h-12" />
+              <img src="@/assets/icons/compare-hor.png" class="w-12" />
               <span class="text-sm font-medium">{{ t('settings.bilingual') }}</span>
             </div>
 
@@ -192,7 +195,7 @@ const autoEnableOcrWorkaround = computed({
               :class="{ 'bg-accent border-primary': alternatingPages }"
               @click="() => { alternatingPages = true; bilingual = false }"
             >
-              <img src="@/assets/icons/compare-vert.png" class="w-12 h-12" />
+              <img src="@/assets/icons/compare-vert.png" class="w-12" />
               <span class="text-sm font-medium">{{ t('settings.alternatingPages') }}</span>
             </div>
           </div>
@@ -331,8 +334,5 @@ const autoEnableOcrWorkaround = computed({
       </AccordionItem>
     </Accordion>
 
-  </div>
-  <div class="mt-4">
-    <p class="text-sm text-gray-500"> Settings will be automatically saved. </p>
   </div>
 </template>

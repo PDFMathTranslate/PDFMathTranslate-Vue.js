@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
-import { Moon, Sun, Languages, Settings } from 'lucide-vue-next'
+import { Moon, Sun, Languages, Settings, X } from 'lucide-vue-next'
 import { useColorMode } from '@vueuse/core'
 import PWAInstallButton from '@/components/PWAInstallButton.vue'
 import {
@@ -11,62 +11,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-
 const props = defineProps({
-  status: {
-    type: String,
-    default: 'ready'
-  }
-})
-
-const statusColor = computed(() => {
-  switch (props.status) {
-    case 'busy': return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'
-    case 'error': return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
-    case 'ready': return 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]'
-    default: return 'bg-gray-500'
-  }
-})
-
-const statusTitle = computed(() => {
-  switch (props.status) {
-    case 'busy': return 'Busy / Translating'
-    case 'error': return 'Error'
-    case 'ready': return 'Service found & communicatable'
-    default: return 'Unknown Status'
+  showSettings: {
+    type: Boolean,
+    default: false
   }
 })
 
 const { locale, t } = useI18n()
-const colorMode = useColorMode()
-const showPreview = ref(false)
-const triggerRef = ref(null)
-const popupStyle = reactive({ top: '0px', right: '0px' })
-
-const showPopup = () => {
-  if (triggerRef.value) {
-    const rect = triggerRef.value.getBoundingClientRect()
-    popupStyle.top = `${rect.bottom + 8}px`
-    // Calculate right position relative to viewport edge
-    // we want the popup's right edge to align with the trigger's right edge roughly,
-    // or just position it near the trigger.
-    // Given the design, right-aligned to the trigger seems best.
-    popupStyle.right = `${window.innerWidth - rect.right}px`
-    showPreview.value = true
-  }
-}
-
-const hidePopup = () => {
-  showPreview.value = false
-}
-
-const emit = defineEmits(['toggle-settings'])
+const colorMode = useColorMode({
+  disableTransition: false
+})
+const emit = defineEmits(['toggle-settings', 'change-language'])
 
 const supportedLocales = [
   { code: 'en', label: 'English', native: 'English' },
@@ -83,8 +39,7 @@ const supportedLocales = [
 ]
 
 const changeLanguage = (langCode) => {
-  locale.value = langCode
-  localStorage.setItem('locale', langCode)
+  emit('change-language', langCode)
 }
 
 const toggleTheme = () => {
@@ -98,57 +53,17 @@ const toggleTheme = () => {
       <h1 class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
       <!-- <span class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</span> -->
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div 
-              :class="['w-3 h-3 rounded-full transition-all duration-300 mr-1 cursor-help', statusColor]" 
-              tabindex="0"
-            ></div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>{{ statusTitle }}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
     </div>
     <div class="flex items-center gap-2">
-      <div
-        ref="triggerRef"
-        class="relative"
-        @mouseenter="showPopup"
-        @mouseleave="hidePopup"
-      >
-        <p class="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors">
-
-          {{ t('header.howDoesItWork') }}
-        </p>
-        <Teleport to="body">
-          <div
-            v-if="showPreview"
-            class="fixed bg-white dark:bg-black border rounded-lg shadow-lg p-2 pointer-events-none"
-            :style="{
-              zIndex: 2147483647,
-              top: popupStyle.top,
-              right: popupStyle.right,
-              maxWidth: '40vw',
-              width: '600px'
-            }"
-          >
-            <img
-              src="/preview.gif"
-              alt="How it works preview"
-              class="rounded-md"
-              style="width: 100%; height: auto;"
-            />
-          </div>
-        </Teleport>
-      </div>
       <PWAInstallButton />
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="ghost" size="icon">
-            <Languages class="h-5 w-5" />
+            <div class="relative w-5 h-5 flex items-center justify-center">
+              <Transition name="rotate-fade" mode="out-in">
+                <Languages :key="locale" class="absolute h-5 w-5" />
+              </Transition>
+            </div>
             <span class="sr-only">{{ t('language.select') }}</span>
           </Button>
         </DropdownMenuTrigger>
@@ -164,13 +79,65 @@ const toggleTheme = () => {
         </DropdownMenuContent>
       </DropdownMenu>
       <Button variant="ghost" size="icon" @click="toggleTheme">
-        <Sun class="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon class="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <div class="relative w-5 h-5 flex items-center justify-center">
+          <Transition name="rotate-fade">
+            <Sun v-if="colorMode === 'light'" class="absolute h-5 w-5 theme-icon-sun" />
+            <Moon v-else class="absolute h-5 w-5 theme-icon-moon" />
+          </Transition>
+        </div>
       </Button>
       <Button variant="ghost" size="icon" @click="emit('toggle-settings')">
-        <Settings class="h-5 w-5" />
-        <span class="sr-only">{{ t('settings.title') }}</span>
+        <div class="relative w-5 h-5 flex items-center justify-center">
+          <Transition name="rotate-fade">
+            <Settings v-if="!showSettings" class="absolute h-5 w-5 settings-icon" />
+            <X v-else class="absolute h-5 w-5 close-icon" />
+          </Transition>
+        </div>
+        <span class="sr-only">{{ showSettings ? t('common.close') : t('settings.title') }}</span>
       </Button>
     </div>
   </header>
 </template>
+
+<style scoped>
+.rotate-fade-enter-active,
+.rotate-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+/* Settings Icon: Rotate between 0 and 90 */
+.rotate-fade-enter-from.settings-icon,
+.rotate-fade-leave-to.settings-icon {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+/* Close Icon: Rotate between 0 and -90 */
+.rotate-fade-enter-from.close-icon,
+.rotate-fade-leave-to.close-icon {
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+
+/* Theme Icons */
+/* Sun (Light Mode) enters/leaves */
+.rotate-fade-enter-from.theme-icon-sun,
+.rotate-fade-leave-to.theme-icon-sun {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+/* Moon (Dark Mode) enters/leaves */
+.rotate-fade-enter-from.theme-icon-moon,
+.rotate-fade-leave-to.theme-icon-moon {
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+
+/* Language Icon: Simple fade and scale */
+.rotate-fade-enter-from:not(.settings-icon):not(.close-icon):not(.theme-icon-sun):not(.theme-icon-moon),
+.rotate-fade-leave-to:not(.settings-icon):not(.close-icon):not(.theme-icon-sun):not(.theme-icon-moon) {
+  opacity: 0;
+  transform: scale(0.8);
+}
+</style>

@@ -13,7 +13,7 @@ import api from '@/services/api'
 import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const config = ref(null)
 const selectedFile = ref(null)
@@ -30,6 +30,7 @@ const isTranslationComplete = computed(() => taskStatus.value === 'completed')
 const serviceStatus = ref('ready') // ready, busy, error
 const showSettings = ref(false)
 const isSaved = ref(false)
+const isLanguageSwitching = ref(false)
 
 // Load preferences from localStorage
 const loadPreferences = () => {
@@ -374,169 +375,158 @@ const downloadMono = async () => {
 const downloadDual = async () => {
     await handleDownload(api.downloadTaskDual);
 }
+
+const handleLanguageChange = (langCode) => {
+  isLanguageSwitching.value = true
+  setTimeout(() => {
+    locale.value = langCode
+    localStorage.setItem('locale', langCode)
+    setTimeout(() => {
+      isLanguageSwitching.value = false
+    }, 50)
+  }, 200)
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-background font-sans antialiased overflow-x-hidden">
-    <Header :status="serviceStatus" @toggle-settings="showSettings = !showSettings" />
+  <div 
+    class="min-h-screen bg-background font-sans antialiased overflow-x-hidden transition-opacity duration-200 flex flex-col"
+    :class="{ 'opacity-0': isLanguageSwitching, 'opacity-100': !isLanguageSwitching }"
+  >
+    <Header :show-settings="showSettings" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
     
-    <main class="container py-10 mx-auto space-y-10">
-      <!-- <section class="space-y-4 text-center">
-        <h2 class="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Translate PDF with Math Preserved</h2>
-        <p class="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-          Accurate translation for scientific papers, preserving formulas and layout.
-        </p>
-      </section> -->
-
-          <div class="flex flex-col lg:flex-row gap-8 relative">
-            <div class="flex-1 min-w-0 space-y-8 transition-all duration-300 ease-in-out">
-              <!-- Translation Options - Hidden when translation starts or is in progress -->
-              <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete">
-                <CardHeader>
-                  <CardTitle>{{ t('translation.options') }}</CardTitle>
-                  <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" />
-                </CardContent>
-              </Card>
+    <main class="container py-10 mx-auto px-6 flex-1">
+      <Transition name="fade" mode="out-in">
+        <div v-if="!showSettings" key="main" class="max-w-4xl mx-auto space-y-8">
+          <!-- Translation Options - Hidden when translation starts or is in progress -->
+          <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete">
+            <CardHeader>
+              <CardTitle>{{ t('translation.options') }}</CardTitle>
+              <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" />
+            </CardContent>
+          </Card>
+          
+          <!-- Progress Box - Show during translation -->
+          <Card v-if="isTranslating || (overallProgress !== null && !isTranslationComplete)">
+            <CardHeader>
+              <CardTitle class="flex items-center gap-2">
+                <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
+                {{ t('translation.translating') }}
+              </CardTitle>
+              <CardDescription v-if="overallProgress !== null">
+                {{ overallProgress.toFixed(1) }}% {{ t('translation.complete') || 'complete' }}
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-4">
+              <div class="space-y-2">
+                  <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
+              </div>
               
-              <!-- Progress Box - Show during translation -->
-              <Card v-if="isTranslating || (overallProgress !== null && !isTranslationComplete)">
-                <CardHeader>
-                  <CardTitle class="flex items-center gap-2">
-                    <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
-                    {{ t('translation.translating') }}
-                  </CardTitle>
-                  <CardDescription v-if="overallProgress !== null">
-                    {{ overallProgress.toFixed(1) }}% {{ t('translation.complete') || 'complete' }}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent class="space-y-4">
-                  <div class="space-y-2">
-                      <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
+              <div v-if="logs.length > 0" class="flex flex-col gap-2">
+                  <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      class="w-fit h-auto p-1 text-xs text-muted-foreground"
+                      @click="isLogsExpanded = !isLogsExpanded"
+                  >
+                      <ChevronDown v-if="!isLogsExpanded" class="h-3 w-3 mr-1" />
+                      <ChevronUp v-else class="h-3 w-3 mr-1" />
+                      {{ isLogsExpanded ? 'Hide' : 'Show' }} Logs ({{ logs.length }})
+                  </Button>
+                  <div v-show="isLogsExpanded" class="p-4 rounded-md max-h-40 overflow-y-auto text-xs font-mono bg-muted/50">
+                      <div v-for="(log, index) in logs" :key="index">{{ log }}</div>
                   </div>
-                  
-                  <div v-if="logs.length > 0" class="flex flex-col gap-2">
-                      <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          class="w-fit h-auto p-1 text-xs text-muted-foreground"
-                          @click="isLogsExpanded = !isLogsExpanded"
-                      >
-                          <ChevronDown v-if="!isLogsExpanded" class="h-3 w-3 mr-1" />
-                          <ChevronUp v-else class="h-3 w-3 mr-1" />
-                          {{ isLogsExpanded ? 'Hide' : 'Show' }} Logs ({{ logs.length }})
-                      </Button>
-                      <div v-show="isLogsExpanded" class="p-4 rounded-md max-h-40 overflow-y-auto text-xs font-mono bg-muted/50">
-                          <div v-for="(log, index) in logs" :key="index">{{ log }}</div>
-                      </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <!-- Translation Result - Show when translation is complete -->
-              <Card v-if="isTranslationComplete">
-                <CardHeader>
-                  <CardTitle>{{ t('translation.result') }}</CardTitle>
-                  <CardDescription>{{ t('translation.resultDescription') }}</CardDescription>
-                </CardHeader>
-                <CardContent class="space-y-6">
-                  <!-- Download Buttons -->
-                  <div class="flex flex-wrap gap-4">
-                    <Button 
-                      v-if="monoPdfUrl" 
-                      variant="default" 
-                      @click="downloadMono"
-                      class="flex items-center gap-2"
-                    >
-                      <Download class="h-4 w-4" />
-                      {{ t('translation.downloadMono') }}
-                    </Button>
-                    <Button 
-                      v-if="dualPdfUrl" 
-                      variant="outline" 
-                      @click="downloadDual"
-                      class="flex items-center gap-2"
-                    >
-                      <Download class="h-4 w-4" />
-                      {{ t('translation.downloadDual') }}
-                    </Button>
-                    <!-- Fallback for old downloadUrl -->
-                    <Button 
-                      v-if="downloadUrl && !monoPdfUrl && !dualPdfUrl" 
-                      variant="outline" 
-                      @click="downloadResult"
-                      class="flex items-center gap-2"
-                    >
-                      <Download class="h-4 w-4" />
-                      {{ t('translation.download') }}
-                    </Button>
-                    
-                    <Button 
-                      variant="secondary" 
-                      @click="resetTranslation"
-                      class="flex items-center gap-2"
-                    >
-                      <RefreshCw class="h-4 w-4" />
-                      {{ t('translation.restart') || 'Start New Translation' }}
-                    </Button>
-                  </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <!-- Translation Result - Show when translation is complete -->
+          <Card v-if="isTranslationComplete">
+            <CardHeader>
+              <CardTitle>{{ t('translation.result') }}</CardTitle>
+              <CardDescription>{{ t('translation.resultDescription') }}</CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
+              <!-- Download Buttons -->
+              <div class="flex flex-wrap gap-4">
+                <Button 
+                  v-if="monoPdfUrl" 
+                  variant="default" 
+                  @click="downloadMono"
+                  class="flex items-center gap-2"
+                >
+                  <Download class="h-4 w-4" />
+                  {{ t('translation.downloadMono') }}
+                </Button>
+                <Button 
+                  v-if="dualPdfUrl" 
+                  variant="outline" 
+                  @click="downloadDual"
+                  class="flex items-center gap-2"
+                >
+                  <Download class="h-4 w-4" />
+                  {{ t('translation.downloadDual') }}
+                </Button>
+                <!-- Fallback for old downloadUrl -->
+                <Button 
+                  v-if="downloadUrl && !monoPdfUrl && !dualPdfUrl" 
+                  variant="outline" 
+                  @click="downloadResult"
+                  class="flex items-center gap-2"
+                >
+                  <Download class="h-4 w-4" />
+                  {{ t('translation.download') }}
+                </Button>
+                
+                <Button 
+                  variant="secondary" 
+                  @click="resetTranslation"
+                  class="flex items-center gap-2"
+                >
+                  <RefreshCw class="h-4 w-4" />
+                  {{ t('translation.restart') || 'Start New Translation' }}
+                </Button>
+              </div>
 
-                  <!-- PDF Preview - Show first page of mono PDF -->
-                  <div v-if="monoPdfUrl" class="space-y-4">
-                    <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container" style="max-height: 600px; overflow-y: auto;">
-                      <VuePdfEmbed 
-                        :source="monoPdfUrl"
-                        class="w-full"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              <!-- PDF Preview - Show first page of mono PDF -->
+              <div v-if="monoPdfUrl" class="space-y-4">
+                <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container" style="max-height: 600px; overflow-y: auto;">
+                  <VuePdfEmbed 
+                    :source="monoPdfUrl"
+                    class="w-full"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Transition name="slide-fade">
-          <div v-show="showSettings" class="w-full lg:w-[400px] shrink-0">
-            <Card class="h-full">
-              <CardHeader>
-                <CardTitle class="flex items-center gap-2">
-                  {{ t('settings.title') }}
-                  <Transition name="fade">
-                    <Check v-if="isSaved" class="h-4 w-4 text-green-500" />
-                  </Transition>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ApplicationSettings v-model="translationParams" />
-              </CardContent>
-            </Card>
-          </div>
-        </Transition>
-      </div>
+        <div v-else key="settings" class="max-w-3xl mx-auto">
+          <Card class="h-full">
+            <CardHeader>
+              <CardTitle class="flex items-center gap-2">
+                {{ t('settings.title') }}
+                <Transition name="fade">
+                  <Check v-if="isSaved" class="h-4 w-4 text-green-500" />
+                </Transition>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ApplicationSettings v-model="translationParams" />
+            </CardContent>
+          </Card>
+        </div>
+      </Transition>
     </main>
 
-    <ProjectInfo />
+    <ProjectInfo :status="serviceStatus" />
   </div>
 </template>
 
 <style scoped>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease-in-out;
-  max-width: 400px;
-  opacity: 1;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  max-width: 0;
-  opacity: 0;
-  transform: translateX(20px);
-  margin-left: 0 !important;
-  overflow: hidden;
-}
-
 /* Hide all PDF pages except the first one in the preview */
 .pdf-preview-container :deep(.vue-pdf-embed > div:not(:first-child)) {
   display: none;

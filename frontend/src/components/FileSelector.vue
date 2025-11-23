@@ -50,7 +50,7 @@ const handleFileSelect = (e) => {
 <template>
   <div class="w-full mt-2">
     <div
-      class="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+      class="relative flex flex-col items-center justify-center w-full h-80 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
       :class="[
         isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
         file ? 'border-primary bg-primary/5' : ''
@@ -68,7 +68,7 @@ const handleFileSelect = (e) => {
         @change="handleFileSelect"
       />
       
-      <div v-if="!file" class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+      <div v-if="!file" class="flex flex-col items-center justify-center pt-0 pb-6 text-center">
         <div class="p-4 mb-4 rounded-full bg-primary/10">
           <Upload class="w-8 h-8 text-primary" />
         </div>
