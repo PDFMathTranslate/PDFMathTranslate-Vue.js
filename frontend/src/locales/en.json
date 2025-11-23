@@ -13,10 +13,14 @@
     "optionsDescription": "A local file or a link",
     "file": "File",
     "link": "Link",
+    "retry": "Retry",
+    "startNew": "Start a new task",
+    "failed": "Failed",
     "pdfLink": "",
     "pdfLinkPlaceholder": "https://example.com/link.to.the.pdf",
     "from": "From",
     "to": "To",
+    "swapLanguages": "Swap Languages",
     "selectLanguage": "Select language",
     "service": "Service",
     "selectService": "Select service",
@@ -35,6 +39,7 @@
   },
   "settings": {
     "title": "Settings",
+    "service": "Translation Service",
     "outputPreference": "Output",
     "monoOnly": "Translated",
     "dualTranslateFirst": "Prioritize Translation",
@@ -68,7 +73,8 @@
     "translateTableText": "Translate Table",
     "skipScannedDetection": "Skip Scanned Detection",
     "ocrWorkaround": "OCR Workaround",
-    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround"
+    "autoEnableOcrWorkaround": "Auto Enable OCR Workaround",
+    "resetSettings": "Reset All Settings"
   },
   "language": {
     "select": "Select Language",

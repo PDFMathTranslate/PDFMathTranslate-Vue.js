@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { ArrowRightLeft } from 'lucide-vue-next'
 import FileSelector from '@/components/FileSelector.vue'
 
 const { t } = useI18n()
@@ -135,6 +137,15 @@ const handleFileSelected = (file) => {
   emit('file-selected', file)
 }
 
+const rotation = ref(0)
+
+const swapLanguages = () => {
+  rotation.value += 180
+  const temp = model.value.langFrom
+  model.value.langFrom = model.value.langTo
+  model.value.langTo = temp
+}
+
 // Ref for the link input container to enable auto-focus
 const linkInputContainerRef = ref(null)
 
@@ -246,8 +257,8 @@ onMounted(() => {
       </TabsContent>
     </Tabs>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div class="space-y-2">
+    <div class="flex items-end gap-2">
+      <div class="flex-1 space-y-2">
         <Label>{{ t('translation.from') }}</Label>
         <Select :model-value="langFrom" @update:model-value="(val) => langFrom = val">
           <SelectTrigger>
@@ -270,7 +281,21 @@ onMounted(() => {
           </SelectContent>
         </Select>
       </div>
-      <div class="space-y-2">
+
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        class="mb-0.5 shrink-0" 
+        @click="swapLanguages"
+        :title="t('translation.swapLanguages')"
+      >
+        <ArrowRightLeft 
+          class="h-4 w-4 transition-transform duration-300"
+          :style="{ transform: `rotate(${rotation}deg)` }"
+        />
+      </Button>
+
+      <div class="flex-1 space-y-2">
         <Label>{{ t('translation.to') }}</Label>
         <Select :model-value="langTo" @update:model-value="(val) => langTo = val">
           <SelectTrigger>
@@ -295,29 +320,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="space-y-2">
-      <Label>{{ t('translation.service') }}</Label>
-      <Select :model-value="service" @update:model-value="(val) => service = val">
-        <SelectTrigger>
-          <SelectValue :placeholder="t('translation.selectService')">
-            <span v-if="service">{{ service }}</span>
-            <span v-else class="text-muted-foreground">{{ t('translation.selectService') }}</span>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem 
-            v-for="srv in services" 
-            :key="`service-${srv}`" 
-            :value="srv"
-          >
-            {{ srv }}
-          </SelectItem>
-          <div v-if="services.length === 0" class="px-2 py-1.5 text-sm text-muted-foreground">
-            {{ t('translation.noServicesAvailable') || 'No services available' }}
-          </div>
-        </SelectContent>
-      </Select>
-    </div>
     
     <!-- Advanced Options Accordion or Toggle could go here -->
   </div>

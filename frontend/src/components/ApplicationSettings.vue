@@ -1,15 +1,38 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const { t } = useI18n()
 
-const model = defineModel({ required: true })
+const props = defineProps({
+  modelValue: { type: Object, required: true },
+  config: { type: Object, default: () => ({ services: [] }) }
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+const model = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
+
+const services = computed(() => {
+  return props.config?.services || []
+})
+
+const service = computed({
+  get: () => model.value?.service,
+  set: (val) => { 
+    if (!model.value) model.value = {}
+    model.value.service = val
+  }
+})
 
 // Output preferences
 // "Bilingual" means enable dual/bilingual output, so noDual should be false when ON
@@ -42,6 +65,23 @@ const alternatingPages = computed({
   set: (val) => { 
     if (!model.value) model.value = {}
     model.value.useAlternatingPagesDual = val 
+  }
+})
+
+// Animation direction logic
+const transitionName = ref('slide-right')
+
+const outputModeIndex = computed(() => {
+  if (alternatingPages.value) return 2
+  if (bilingual.value) return 1
+  return 0
+})
+
+watch(outputModeIndex, (newVal, oldVal) => {
+  if (newVal > oldVal) {
+    transitionName.value = 'slide-left'
+  } else {
+    transitionName.value = 'slide-right'
   }
 })
 
@@ -160,6 +200,108 @@ const autoEnableOcrWorkaround = computed({
     model.value.autoEnableOcrWorkaround = val 
   }
 })
+
+const resetSettings = () => {
+  localStorage.clear()
+  window.location.reload()
+}
+
+// Service Configuration Mapping
+const serviceFields = {
+  OpenAI: [
+    { name: 'openai_api_key', label: 'API Key', type: 'password' },
+    { name: 'openai_model', label: 'Model', type: 'text', placeholder: 'gpt-4o-mini' },
+    { name: 'openai_base_url', label: 'Base URL', type: 'text' },
+  ],
+  AzureOpenAI: [
+    { name: 'azure_openai_api_key', label: 'API Key', type: 'password' },
+    { name: 'azure_openai_base_url', label: 'Base URL', type: 'text' },
+    { name: 'azure_openai_model', label: 'Model', type: 'text', placeholder: 'gpt-4o-mini' },
+    { name: 'azure_openai_api_version', label: 'API Version', type: 'text', placeholder: '2024-06-01' },
+  ],
+  DeepSeek: [
+    { name: 'deepseek_api_key', label: 'API Key', type: 'password' },
+    { name: 'deepseek_model', label: 'Model', type: 'text', placeholder: 'deepseek-chat' },
+  ],
+  Ollama: [
+    { name: 'ollama_host', label: 'Host', type: 'text', placeholder: 'http://localhost:11434' },
+    { name: 'ollama_model', label: 'Model', type: 'text', placeholder: 'gemma2' },
+  ],
+  Xinference: [
+    { name: 'xinference_host', label: 'Host', type: 'text' },
+    { name: 'xinference_model', label: 'Model', type: 'text', placeholder: 'gemma-2-it' },
+  ],
+  ModelScope: [
+    { name: 'modelscope_api_key', label: 'API Key', type: 'password' },
+    { name: 'modelscope_model', label: 'Model', type: 'text', placeholder: 'Qwen/Qwen2.5-32B-Instruct' },
+  ],
+  Zhipu: [
+    { name: 'zhipu_api_key', label: 'API Key', type: 'password' },
+    { name: 'zhipu_model', label: 'Model', type: 'text', placeholder: 'glm-4-flash' },
+  ],
+  SiliconFlow: [
+    { name: 'siliconflow_api_key', label: 'API Key', type: 'password' },
+    { name: 'siliconflow_model', label: 'Model', type: 'text', placeholder: 'Qwen/Qwen2.5-7B-Instruct' },
+    { name: 'siliconflow_base_url', label: 'Base URL', type: 'text', placeholder: 'https://api.siliconflow.cn/v1' },
+  ],
+  TencentMechineTranslation: [
+    { name: 'tencentcloud_secret_id', label: 'Secret ID', type: 'password' },
+    { name: 'tencentcloud_secret_key', label: 'Secret Key', type: 'password' },
+  ],
+  Gemini: [
+    { name: 'gemini_api_key', label: 'API Key', type: 'password' },
+    { name: 'gemini_model', label: 'Model', type: 'text', placeholder: 'gemini-1.5-flash' },
+  ],
+  Azure: [
+    { name: 'azure_api_key', label: 'API Key', type: 'password' },
+    { name: 'azure_endpoint', label: 'Endpoint', type: 'text', placeholder: 'https://api.translator.azure.cn' },
+  ],
+  AnythingLLM: [
+    { name: 'anythingllm_apikey', label: 'API Key', type: 'password' },
+    { name: 'anythingllm_url', label: 'URL', type: 'text' },
+  ],
+  Dify: [
+    { name: 'dify_apikey', label: 'API Key', type: 'password' },
+    { name: 'dify_url', label: 'URL', type: 'text' },
+  ],
+  Grok: [
+    { name: 'grok_api_key', label: 'API Key', type: 'password' },
+    { name: 'grok_model', label: 'Model', type: 'text', placeholder: 'grok-2-1212' },
+  ],
+  Groq: [
+    { name: 'groq_api_key', label: 'API Key', type: 'password' },
+    { name: 'groq_model', label: 'Model', type: 'text', placeholder: 'llama-3-3-70b-versatile' },
+  ],
+  QwenMt: [
+    { name: 'qwenmt_api_key', label: 'API Key', type: 'password' },
+    { name: 'qwenmt_model', label: 'Model', type: 'text', placeholder: 'qwen-mt-plus' },
+    { name: 'qwenmt_base_url', label: 'Base URL', type: 'text', placeholder: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
+  ],
+  OpenAICompatible: [
+    { name: 'openai_compatible_api_key', label: 'API Key', type: 'password' },
+    { name: 'openai_compatible_base_url', label: 'Base URL', type: 'text' },
+    { name: 'openai_compatible_model', label: 'Model', type: 'text', placeholder: 'gpt-4o-mini' },
+  ],
+  AliyunDashScope: [
+    { name: 'aliyun_dashscope_api_key', label: 'API Key', type: 'password' },
+    { name: 'aliyun_dashscope_model', label: 'Model', type: 'text', placeholder: 'qwen-plus-latest' },
+    { name: 'aliyun_dashscope_base_url', label: 'Base URL', type: 'text', placeholder: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
+  ],
+  DeepL: [
+    { name: 'deepl_auth_key', label: 'Auth Key', type: 'password' },
+  ],
+  ClaudeCode: [
+    { name: 'claude_code_path', label: 'CLI Path', type: 'text', placeholder: 'claude' },
+    { name: 'claude_code_model', label: 'Model', type: 'text', placeholder: 'sonnet' },
+  ],
+  SiliconFlowFree: [],
+  Google: [],
+  Bing: []
+}
+
+const currentServiceFields = computed(() => {
+  return serviceFields[service.value] || []
+})
 </script>
 
 <template>
@@ -168,6 +310,8 @@ const autoEnableOcrWorkaround = computed({
   </div> -->
   <div class="space-y-6">
     <Accordion type="single" collapsible class="w-full" defaultValue="output-preference">
+      
+      <!-- New Service Settings Accordion Item -->
       <AccordionItem value="output-preference">
         <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
@@ -200,9 +344,55 @@ const autoEnableOcrWorkaround = computed({
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-2" v-if="bilingual">
-            <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
-            <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
+          <div class="overflow-hidden">
+            <Transition :name="transitionName">
+              <div class="flex items-center justify-between pt-2" v-if="bilingual">
+                <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
+                <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
+              </div>
+            </Transition>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="service">
+        <AccordionTrigger>{{ t('settings.service') }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="space-y-2">
+            <Label>{{ t('translation.selectService') }}</Label>
+            <Select v-model="service">
+              <SelectTrigger>
+                <SelectValue :placeholder="t('translation.selectService')">
+                  <span v-if="service">{{ service }}</span>
+                  <span v-else class="text-muted-foreground">{{ t('translation.selectService') }}</span>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem 
+                  v-for="srv in services" 
+                  :key="`service-${srv}`" 
+                  :value="srv"
+                >
+                  {{ srv }}
+                </SelectItem>
+                <div v-if="services.length === 0" class="px-2 py-1.5 text-sm text-muted-foreground">
+                  {{ t('translation.noServicesAvailable') || 'No services available' }}
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <!-- Dynamic Service Fields -->
+          <div v-if="currentServiceFields.length > 0" class="space-y-4 pt-2 border-t mt-4">
+            <div v-for="field in currentServiceFields" :key="field.name" class="space-y-2">
+              <Label :for="field.name">{{ field.label }}</Label>
+              <Input 
+                :id="field.name" 
+                v-model="model[field.name]" 
+                :type="field.type" 
+                :placeholder="field.placeholder"
+              />
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -330,9 +520,45 @@ const autoEnableOcrWorkaround = computed({
             <Label for="auto-enable-ocr-workaround">{{ t('settings.autoEnableOcrWorkaround') }}</Label>
             <Switch id="auto-enable-ocr-workaround" v-model="autoEnableOcrWorkaround" />
           </div>
+          <div class="pt-2">
+            <Button variant="destructive" class="w-full" @click="resetSettings">
+              {{ t('settings.resetSettings') }}
+            </Button>
+          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
 
   </div>
 </template>
+
+<style scoped>
+/* Slide Left: Enter from Right, Leave to Left */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease-in-out;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Slide Right: Enter from Left, Leave to Right */
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+</style>

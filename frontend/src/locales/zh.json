@@ -17,6 +17,7 @@
     "pdfLinkPlaceholder": "https://example.com/paper.pdf",
     "from": "源语言",
     "to": "目标语言",
+    "swapLanguages": "交换语言",
     "selectLanguage": "选择语言",
     "service": "服务",
     "selectService": "选择服务",
@@ -24,6 +25,9 @@
     "starting": "启动中...",
     "translating": "翻译中...",
     "stop": "停止",
+    "retry": "重试",
+    "startNew": "开始新任务",
+    "failed": "失败",
     "stoppedByUser": "用户已停止",
     "originalFilePreview": "原文件预览",
     "download": "下载翻译后的PDF",
@@ -35,6 +39,7 @@
   },
   "settings": {
     "title": "设置",
+    "service": "翻译服务",
     "outputPreference": "输出偏好",
     "monoOnly": "仅翻译",
     "dualTranslateFirst": "翻译优先",
@@ -68,7 +73,8 @@
     "translateTableText": "翻译表格文字",
     "skipScannedDetection": "跳过扫描检测",
     "ocrWorkaround": "使用字符识别方案",
-    "autoEnableOcrWorkaround": "自动启用字符识别方案"
+    "autoEnableOcrWorkaround": "自动启用字符识别方案",
+    "resetSettings": "重置所有设置"
   },
   "language": {
     "select": "选择语言",

@@ -674,12 +674,12 @@ onKeyStroke(['l', 'L'], (e) => {
                  </div>
               </div>
 
-              <div class="space-y-2">
+              <div v-if="taskStatus !== 'failed'" class="space-y-2">
                   <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
               </div>
               
               <!-- Stages List -->
-              <div v-if="stages.length > 0" class="mt-4 h-9 overflow-hidden relative">
+              <div v-if="stages.length > 0 && taskStatus !== 'failed'" class="mt-4 h-9 overflow-hidden relative">
                 <div 
                   class="transition-transform duration-500 ease-in-out absolute h-full top-0 left-0 flex gap-2"
                   :style="{ transform: `translateX(-${activeStageIndex * 12.5}rem)` }"
@@ -705,7 +705,7 @@ onKeyStroke(['l', 'L'], (e) => {
               </div>
 
               <!-- Original File Preview -->
-              <div v-if="selectedFilePreviewUrl" class="space-y-2">
+              <div v-if="selectedFilePreviewUrl && taskStatus !== 'failed'" class="space-y-2">
                   <!-- <p class="text-sm text-muted-foreground">{{ t('translation.originalFilePreview') }}</p> -->
                   <div class="border rounded-lg overflow-hidden p-4 pdf-preview-container">
                       <VuePdfEmbed 
@@ -792,7 +792,7 @@ onKeyStroke(['l', 'L'], (e) => {
 
               <!-- PDF Preview - Show first page of mono PDF -->
               <div v-if="monoPdfUrl" class="space-y-4">
-                <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container">
+                <div class="border rounded-lg overflow-hidden p-4 pdf-preview-container">
                   <VuePdfEmbed 
                     :source="monoPdfUrl"
                     class="w-full"
@@ -814,7 +814,7 @@ onKeyStroke(['l', 'L'], (e) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ApplicationSettings v-model="translationParams" />
+              <ApplicationSettings v-model="translationParams" :config="config" />
             </CardContent>
           </Card>
         </div>
@@ -826,6 +826,11 @@ onKeyStroke(['l', 'L'], (e) => {
 </template>
 
 <style scoped>
+/* Dark mode: darken the PDF content only */
+:global(.dark) .pdf-preview-container :deep(.vue-pdf-embed) {
+  filter: brightness(0.7);
+}
+
 /* Hide all PDF pages except the first one in the preview */
 .pdf-preview-container :deep(.vue-pdf-embed > div:not(:first-child)) {
   display: none;
