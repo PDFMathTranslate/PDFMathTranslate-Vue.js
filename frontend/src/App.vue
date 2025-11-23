@@ -451,34 +451,14 @@ const startTranslation = async () => {
     }
     
     // 2. Start Translation
+    // Spread all translation params to ensure dynamic service fields are included
     const params = {
+      ...translationParams,
+      // Override/add required fields
       file_id: fileId,
       lang_from: translationParams.langFrom,
       lang_to: translationParams.langTo,
       service: translationParams.service,
-      // Output preferences
-      no_mono: translationParams.noMono || undefined,
-      no_dual: translationParams.noDual || undefined,
-      dual_translate_first: translationParams.dualTranslateFirst || undefined,
-      use_alternating_pages_dual: translationParams.useAlternatingPagesDual || undefined,
-      // Rate limiting
-      qps: translationParams.qps,
-      pool_max_workers: translationParams.poolMaxWorkers,
-      term_qps: translationParams.termQps,
-      term_pool_max_workers: translationParams.termPoolMaxWorkers,
-      // PDF processing
-      pages: translationParams.pages,
-      watermark_output_mode: translationParams.watermarkOutputMode,
-      max_pages_per_part: translationParams.maxPagesPerPart,
-      // Translation options
-      min_text_length: translationParams.minTextLength,
-      ignore_cache: translationParams.ignoreCache || undefined,
-      custom_system_prompt: translationParams.customSystemPrompt,
-      // Advanced options
-      translate_table_text: translationParams.translateTableText || undefined,
-      skip_scanned_detection: translationParams.skipScannedDetection || undefined,
-      ocr_workaround: translationParams.ocrWorkaround || undefined,
-      auto_enable_ocr_workaround: translationParams.autoEnableOcrWorkaround || undefined,
     }
     
     // Remove undefined values

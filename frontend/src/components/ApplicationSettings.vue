@@ -237,7 +237,7 @@ const serviceFields = {
   OpenAI: [
     { name: 'openai_api_key', label: 'API Key', type: 'password' },
     { name: 'openai_model', label: 'Model', type: 'text', placeholder: 'gpt-4o-mini' },
-    { name: 'openai_base_url', label: 'Base URL', type: 'text' },
+    { name: 'openai_base_url', label: 'Base URL', type: 'text', placeholder: 'https://api.openai.com/v1' },
   ],
   AzureOpenAI: [
     { name: 'azure_openai_api_key', label: 'API Key', type: 'password' },
@@ -305,7 +305,7 @@ const serviceFields = {
   ],
   OpenAICompatible: [
     { name: 'openai_compatible_api_key', label: 'API Key', type: 'password' },
-    { name: 'openai_compatible_base_url', label: 'Base URL', type: 'text' },
+    { name: 'openai_compatible_base_url', label: 'Base URL', type: 'text', placeholder: 'https://api.openai.com/v1' },
     { name: 'openai_compatible_model', label: 'Model', type: 'text', placeholder: 'gpt-4o-mini' },
   ],
   AliyunDashScope: [

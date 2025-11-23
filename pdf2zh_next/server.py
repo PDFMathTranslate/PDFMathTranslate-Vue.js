@@ -8,7 +8,7 @@ from typing import Optional, List
 import psutil
 import time
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -65,6 +65,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.post("/api/translate")
 async def start_translation(
+    request: Request,
     file_id: str = Form(...),
     lang_from: str = Form(...),
     lang_to: str = Form(...),
@@ -84,10 +85,30 @@ async def start_translation(
     logger.info(f"Task {task_id}: Found file {file_path.name}")
 
     # Start task using asyncio.create_task instead of BackgroundTasks
-    # This allows us to store the task object and cancel it later
-    task = asyncio.create_task(run_translation(task_id, file_path, lang_from, lang_to, service))
-    tasks[task_id]["task_object"] = task
+    # This allows us to store the task object
+    # Prepare UI inputs
+    form_data = await request.form()
+    ui_inputs = dict(form_data)
     
+    # Ensure required fields are present (they should be from args, but good to have in dict)
+    ui_inputs.update({
+        "file_id": file_id,
+        "lang_from": lang_from,
+        "lang_to": lang_to,
+        "service": service
+    })
+
+    task = asyncio.create_task(run_translation(task_id, file_path, ui_inputs))
+    tasks[task_id] = {
+        "status": "pending",
+        "file_id": file_id,
+        "lang_from": lang_from,
+        "lang_to": lang_to,
+        "service": service,
+        "logs": [],
+        "created_at": time.time(),
+        "task_object": task
+    }    
     return {"task_id": task_id}
 
 @app.post("/api/cancel/{task_id}")
@@ -376,20 +397,25 @@ def _build_translate_settings(
     page_range = ui_inputs.get("page_range")
     page_input = ui_inputs.get("page_input")
     prompt = ui_inputs.get("prompt")
-    ignore_cache = ui_inputs.get("ignore_cache")
+    ignore_cache = ui_inputs.get("ignore_cache") or ui_inputs.get("ignoreCache")
 
     # PDF Output Options
-    no_mono = ui_inputs.get("no_mono")
-    no_dual = ui_inputs.get("no_dual")
-    dual_translate_first = ui_inputs.get("dual_translate_first")
-    use_alternating_pages_dual = ui_inputs.get("use_alternating_pages_dual")
-    watermark_output_mode = ui_inputs.get("watermark_output_mode")
+    no_mono = ui_inputs.get("no_mono") or ui_inputs.get("noMono")
+    no_dual = ui_inputs.get("no_dual") or ui_inputs.get("noDual")
+    dual_translate_first = ui_inputs.get("dual_translate_first") or ui_inputs.get("dualTranslateFirst")
+    use_alternating_pages_dual = ui_inputs.get("use_alternating_pages_dual") or ui_inputs.get("useAlternatingPagesDual")
+    watermark_output_mode = ui_inputs.get("watermark_output_mode") or ui_inputs.get("watermarkOutputMode")
 
     # Rate Limit Options
     rate_limit_mode = ui_inputs.get("rate_limit_mode")
+    # Direct QPS/Worker settings from frontend
+    qps_input = ui_inputs.get("qps")
+    pool_max_workers_input = ui_inputs.get("pool_max_workers") or ui_inputs.get("poolMaxWorkers")
+    term_qps_input = ui_inputs.get("term_qps") or ui_inputs.get("termQps")
+    term_pool_max_workers_input = ui_inputs.get("term_pool_max_workers") or ui_inputs.get("termPoolMaxWorkers")
 
     # Advanced Translation Options
-    min_text_length = ui_inputs.get("min_text_length")
+    min_text_length = ui_inputs.get("min_text_length") or ui_inputs.get("minTextLength")
     rpc_doclayout = ui_inputs.get("rpc_doclayout")
     enable_auto_term_extraction = ui_inputs.get("enable_auto_term_extraction")
     primary_font_family = ui_inputs.get("primary_font_family")
@@ -400,13 +426,13 @@ def _build_translate_settings(
     enhance_compatibility = ui_inputs.get("enhance_compatibility")
     split_short_lines = ui_inputs.get("split_short_lines")
     short_line_split_factor = ui_inputs.get("short_line_split_factor")
-    translate_table_text = ui_inputs.get("translate_table_text")
-    skip_scanned_detection = ui_inputs.get("skip_scanned_detection")
-    ocr_workaround = ui_inputs.get("ocr_workaround")
-    max_pages_per_part = ui_inputs.get("max_pages_per_part")
+    translate_table_text = ui_inputs.get("translate_table_text") or ui_inputs.get("translateTableText")
+    skip_scanned_detection = ui_inputs.get("skip_scanned_detection") or ui_inputs.get("skipScannedDetection")
+    ocr_workaround = ui_inputs.get("ocr_workaround") or ui_inputs.get("ocrWorkaround")
+    max_pages_per_part = ui_inputs.get("max_pages_per_part") or ui_inputs.get("maxPagesPerPart")
     formular_font_pattern = ui_inputs.get("formular_font_pattern")
     formular_char_pattern = ui_inputs.get("formular_char_pattern")
-    auto_enable_ocr_workaround = ui_inputs.get("auto_enable_ocr_workaround")
+    auto_enable_ocr_workaround = ui_inputs.get("auto_enable_ocr_workaround") or ui_inputs.get("autoEnableOcrWorkaround")
     only_include_translated_page = ui_inputs.get("only_include_translated_page")
 
     # BabelDOC v0.5.1 new options
@@ -427,7 +453,7 @@ def _build_translate_settings(
     term_custom_pool_workers = ui_inputs.get("term_custom_pool_workers")
 
     # New input for custom_system_prompt
-    custom_system_prompt_input = ui_inputs.get("custom_system_prompt_input")
+    custom_system_prompt_input = ui_inputs.get("custom_system_prompt_input") or ui_inputs.get("customSystemPrompt")
     glossaries = ui_inputs.get("glossaries")
     save_auto_extracted_glossary = ui_inputs.get("save_auto_extracted_glossary")
 
@@ -489,9 +515,13 @@ def _build_translate_settings(
 
     # Calculate and update rate limit settings
     if service != "SiliconFlowFree":
-        qps, pool_workers = _calculate_rate_limit_params(
-            rate_limit_mode, ui_inputs, translate_settings.translation.qps or 4
-        )
+        if qps_input:
+             qps = qps_input
+             pool_workers = pool_max_workers_input
+        else:
+            qps, pool_workers = _calculate_rate_limit_params(
+                rate_limit_mode, ui_inputs, translate_settings.translation.qps or 4
+            )
 
         # Update translation settings
         translate_settings.translation.qps = int(qps)
@@ -572,7 +602,6 @@ def _build_translate_settings(
                 setattr(term_detail_settings, field_name, value)
 
     # Update PDF Settings
-    translate_settings.pdf.pages = pages
     if no_mono is not None:
         translate_settings.pdf.no_mono = no_mono
     if no_dual is not None:
@@ -657,13 +686,15 @@ def _build_translate_settings(
                     continue
                 
                 # Fix: disable_gui_sensitive_input is not defined in this scope, get it from settings
-                disable_gui_sensitive_input = base_settings.gui_settings.disable_gui_sensitive_input
+                # disable_gui_sensitive_input = base_settings.gui_settings.disable_gui_sensitive_input
                 
-                if disable_gui_sensitive_input:
-                    if field_name in GUI_PASSWORD_FIELDS:
-                        continue
-                    if field_name in GUI_SENSITIVE_FIELDS:
-                        continue
+                # if disable_gui_sensitive_input:
+                #     if field_name in GUI_PASSWORD_FIELDS:
+                #         logger.warning(f"Skipping sensitive field {field_name} because disable_gui_sensitive_input is True")
+                #         continue
+                #     if field_name in GUI_SENSITIVE_FIELDS:
+                #         logger.warning(f"Skipping sensitive field {field_name} because disable_gui_sensitive_input is True")
+                #         continue
                 value = ui_inputs.get(field_name)
                 if value is None:
                     continue
@@ -676,7 +707,10 @@ def _build_translate_settings(
                 elif type_hint is int or int in type_args:
                     value = int(value)
                 elif type_hint is bool or bool in type_args:
-                    value = bool(value)
+                    if isinstance(value, str):
+                        value = value.lower() in ('true', '1', 'yes', 'on')
+                    else:
+                        value = bool(value)
                 else:
                     raise Exception(
                         f"Unsupported type {type_hint} for field {field_name} in gui translation engine settings"
@@ -735,7 +769,11 @@ def _build_translate_settings(
 
 
 
-async def run_translation(task_id, file_path, lang_from, lang_to, service):
+async def run_translation(task_id, file_path, ui_inputs):
+    service = ui_inputs.get("service")
+    lang_from = ui_inputs.get("lang_from")
+    lang_to = ui_inputs.get("lang_to")
+    
     tasks[task_id]["status"] = "processing"
     logger.info(f"Task {task_id}: Starting translation for file {file_path.name}, from {lang_from} to {lang_to} using {service}")
     try:
@@ -743,14 +781,9 @@ async def run_translation(task_id, file_path, lang_from, lang_to, service):
         config_manager = ConfigManager()
         base_settings = config_manager.initialize_cli_config()
         
-        # Prepare UI inputs
-        ui_inputs = {
-            "service": service,
-            "lang_from": lang_from,
-            "lang_to": lang_to,
-            "page_range": "All", # Default for now
-            # Add defaults for other fields
-        }
+        if "page_range" not in ui_inputs:
+            ui_inputs["page_range"] = "All" # Default
+
         
         # Build settings
         settings = _build_translate_settings(

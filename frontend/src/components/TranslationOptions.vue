@@ -287,18 +287,6 @@ onMounted(() => {
     <!-- Service Info -->
     <div v-if="service" class="pt-0 ">
 
-      <p v-if="service !== 'SiliconFlowFree'" class="text-xs text-muted-foreground text-center text-muted-foreground">
-        {{ t('fileSelector.currentService') }} <span class="font-medium  text-muted-foreground">{{ service }}</span>
-        · 
-        <a 
-          href="#"
-          @click.prevent="emit('open-service-settings')"
-          class=" text-primary hover:underline focus:outline-none focus:underline"
-        >
-          {{ t('fileSelector.changeService') }}
-        </a>
-      </p>
-
       
       <p v-if="service !== 'SiliconFlowFree'" class="text-xs text-muted-foreground text-center text-muted-foreground">
         {{ t('fileSelector.currentService') }} <span class="font-medium  text-muted-foreground">{{ service }}</span>
