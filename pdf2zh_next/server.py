@@ -917,6 +917,8 @@ async def get_config():
 
 async def run_server(host="0.0.0.0", port=8000):
     import uvicorn
+    import webbrowser
+    import threading
     
     # Determine frontend path
     # Assuming structure:
@@ -938,6 +940,18 @@ async def run_server(host="0.0.0.0", port=8000):
         logger.info(f"Serving frontend from {frontend_dist}")
     else:
         logger.warning(f"Frontend dist not found at {frontend_dist}. Run 'bun run build' in frontend directory.")
+    
+    # Function to open browser after a short delay
+    def open_browser():
+        import time
+        time.sleep(1.5)  # Wait for server to start
+        url = f"http://127.0.0.1:{port}/"
+        logger.info(f"Opening browser at {url}")
+        webbrowser.open(url)
+    
+    # Start browser opening in a separate thread
+    browser_thread = threading.Thread(target=open_browser, daemon=True)
+    browser_thread.start()
         
     config = uvicorn.Config(app, host=host, port=port)
     server = uvicorn.Server(config)

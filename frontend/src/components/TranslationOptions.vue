@@ -1,10 +1,8 @@
 <script setup>
-import { computed, watch, ref, nextTick, onMounted } from 'vue'
+import { computed, watch, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { ArrowRightLeft } from 'lucide-vue-next'
 import FileSelector from '@/components/FileSelector.vue'
@@ -146,27 +144,6 @@ const swapLanguages = () => {
   model.value.langTo = temp
 }
 
-// Ref for the link input container to enable auto-focus
-const linkInputContainerRef = ref(null)
-
-// Watch for tab changes to auto-focus the input when Link tab is selected
-watch(() => model.value.source, async (newSource) => {
-  if (newSource === 'Link') {
-    // Wait for the tab content to be rendered and visible
-    await nextTick()
-    // Add a small delay to ensure the TabsContent is fully visible
-    setTimeout(() => {
-      if (linkInputContainerRef.value) {
-        // Find the input element within the container
-        const inputElement = linkInputContainerRef.value.querySelector('input')
-        if (inputElement && typeof inputElement.focus === 'function') {
-          inputElement.focus()
-        }
-      }
-    }, 100)
-  }
-})
-
 // Create computed properties for two-way binding with validation
 const langFrom = computed({
   get: () => {
@@ -238,24 +215,11 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <Tabs v-model="model.source" class="w-full">
-      <TabsList class="grid w-full grid-cols-2">
-        <TabsTrigger value="File">{{ t('translation.file') }}</TabsTrigger>
-        <TabsTrigger value="Link">{{ t('translation.link') }}</TabsTrigger>
-      </TabsList>
-      <TabsContent value="File" class="mt-2">
-        <FileSelector @file-selected="handleFileSelected" />
-      </TabsContent>
-      <TabsContent value="Link" class="mt-2">
-        <div ref="linkInputContainerRef" class="space-y-2">
-          <Label>{{ t('translation.pdfLink') }}</Label>
-          <Input 
-            v-model="model.url" 
-            :placeholder="t('translation.pdfLinkPlaceholder')" 
-          />
-        </div>
-      </TabsContent>
-    </Tabs>
+    <FileSelector 
+      v-model:source="model.source" 
+      v-model:url="model.url" 
+      @file-selected="handleFileSelected" 
+    />
 
     <div class="flex items-end gap-2">
       <div class="flex-1 space-y-2">

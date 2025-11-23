@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Github } from 'lucide-vue-next'
+import { Github, Keyboard } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -55,6 +55,24 @@ const showPopup = () => {
 
 const hidePopup = () => {
   showPreview.value = false
+}
+
+const showShortcuts = ref(false)
+const shortcutsTriggerRef = ref(null)
+const shortcutsPopupStyle = reactive({ bottom: '0px', left: '0px', transform: 'translateX(-50%)' })
+
+const showShortcutsPopup = () => {
+  if (shortcutsTriggerRef.value) {
+    const rect = shortcutsTriggerRef.value.getBoundingClientRect()
+    shortcutsPopupStyle.bottom = `${window.innerHeight - rect.top + 8}px`
+    shortcutsPopupStyle.left = `${rect.left + rect.width / 2}px`
+    shortcutsPopupStyle.transform = 'translateX(-50%)'
+    showShortcuts.value = true
+  }
+}
+
+const hideShortcutsPopup = () => {
+  showShortcuts.value = false
 }
 </script>
 
@@ -110,10 +128,51 @@ const hidePopup = () => {
         </Teleport>
       </div>
 
-      <div class="text-end md:flex-1 flex justify-end">
+      <div class="text-end md:flex-1 flex justify-end gap-2">
+      <div
+        ref="shortcutsTriggerRef"
+        class="relative flex items-center"
+        @mouseenter="showShortcutsPopup"
+        @mouseleave="hideShortcutsPopup"
+      >
+        <Button variant="ghost" size="sm">
+          <Keyboard class="w-4 h-4 mr-2" />
+          {{ t('shortcuts.title') }}
+        </Button>
+        <Teleport to="body">
+          <div
+            v-if="showShortcuts"
+            class="fixed bg-white dark:bg-black border rounded-lg shadow-lg p-4 pointer-events-none z-[2147483647]"
+            :style="{
+              bottom: shortcutsPopupStyle.bottom,
+              left: shortcutsPopupStyle.left,
+              transform: shortcutsPopupStyle.transform,
+              width: 'max-content'
+            }"
+          >
+            <div class="grid grid-cols-[auto,auto] gap-x-6 gap-y-2 text-sm items-center">
+                <span class="text-muted-foreground">{{ t('shortcuts.new') }} / {{ t('shortcuts.stop') }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + N / R</span>
+                
+                <span class="text-muted-foreground">{{ t('shortcuts.settings') }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + P / ,</span>
+                
+                <span class="text-muted-foreground">{{ t('shortcuts.theme') }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + D</span>
+                
+                <span class="text-muted-foreground">{{ t('shortcuts.language') }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + L</span>
+
+                <span class="text-muted-foreground">{{ t('shortcuts.closeSettings') }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">Esc</span>
+            </div>
+          </div>
+        </Teleport>
+      </div>
+
       <a href="https://github.com/PDFMathTranslate/PDFMathTranslate" target="_blank" rel="noreferrer">
         <Button variant="ghost" size="sm">
-          <Github />
+          <Github class="w-4 h-4 mr-2" />
           GitHub
         </Button>
       </a>

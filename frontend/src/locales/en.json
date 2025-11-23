@@ -1,15 +1,15 @@
 {
   "app": {
     "title": "PDFMathTranslate",
-    "subtitle": "alpha"
+    "subtitle": "Experiment alpha by Rongxin"
   },
   "fileSelector": {
-    "clickToUpload": "Click to upload",
-    "dragAndDrop": "or drop a PDF file here",
-    "subtitle": "The translation will start immediately after you drop the file."
+    "clickToUpload": "Click to upload or drop a PDF file here",
+    "dragAndDrop": "Translation will start immediately.",
+    "subtitle": "The translation will start immediately."
   },
   "translation": {
-    "options": "Translate and preserve layout...",
+    "options": "File",
     "optionsDescription": "A local file or a link",
     "file": "File",
     "link": "Link",
@@ -98,6 +98,7 @@
     "install": "Install App"
   },
   "shortcuts": {
+    "title": "Shortcuts",
     "language": "Switch Language",
     "theme": "Toggle Dark Mode",
     "settings": "Toggle Settings",

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
-import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle } from 'lucide-vue-next'
+import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 import {
   Tooltip,
@@ -81,18 +81,27 @@ onUnmounted(() => {
     }
 })
 
-const isWCO = ref(false)
+const isWco = ref(false)
 
-const checkWCO = () => {
-  if ('windowControlsOverlay' in navigator) {
-    isWCO.value = navigator.windowControlsOverlay.visible
+const checkWco = () => {
+  // Only enable WCO if:
+  // 1. The API exists
+  // 2. The overlay is actually visible
+  // 3. We're in a standalone PWA (not just a regular browser tab)
+  if ('windowControlsOverlay' in navigator && 
+      navigator.windowControlsOverlay && 
+      navigator.windowControlsOverlay.visible &&
+      window.matchMedia('(display-mode: standalone)').matches) {
+    isWco.value = true
+  } else {
+    isWco.value = false
   }
 }
 
 onMounted(async () => {
-  checkWCO()
+  checkWco()
   if ('windowControlsOverlay' in navigator) {
-    navigator.windowControlsOverlay.addEventListener('geometrychange', checkWCO)
+    navigator.windowControlsOverlay.addEventListener('geometrychange', checkWco)
   }
 
   try {
@@ -108,7 +117,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if ('windowControlsOverlay' in navigator) {
-    navigator.windowControlsOverlay.removeEventListener('geometrychange', checkWCO)
+    navigator.windowControlsOverlay.removeEventListener('geometrychange', checkWco)
   }
 })
 
@@ -563,7 +572,7 @@ const handleLanguageChange = (langCode) => {
 onKeyStroke(['n', 'N', 'r', 'R'], (e) => {
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
     e.preventDefault()
-    if (isTranslating.value || taskId.value) {
+    if (isTranslating.value) {
       stopTranslation()
     } else {
       resetTranslation()
@@ -610,16 +619,49 @@ onKeyStroke(['l', 'L'], (e) => {
     class="min-h-screen bg-background font-sans antialiased overflow-x-hidden transition-opacity duration-200 flex flex-col"
     :class="{ 'opacity-0': isLanguageSwitching, 'opacity-100': !isLanguageSwitching }"
   >
-    <Header :show-settings="showSettings" :is-w-c-o="isWCO" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
+    <Header v-if="!isWco" :show-settings="showSettings" :is-wco="isWco" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
     
-    <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWCO }">
+    <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
         <div v-if="!showSettings" key="main" class="max-w-4xl mx-auto space-y-8">
           <!-- Translation Options - Hidden when translation starts or is in progress -->
-          <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete">
-            <CardHeader>
-              <CardTitle>{{ t('translation.options') }}</CardTitle>
-              <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
+          <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'">
+            <CardHeader class="flex flex-row items-start justify-between pb-2 space-y-0">
+
+              <div class="space-y-1.5">
+                <CardTitle>{{ t('translation.options') }}</CardTitle>
+                <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
+              </div>
+              <div class="flex gap-1 bg-muted/30 p-1 rounded-lg">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  @click="translationParams.source = 'File'" 
+                  class="transition-all duration-300 rounded-md hover:bg-background/50"
+                  :class="translationParams.source === 'File' 
+                    ? 'bg-background shadow-sm text-primary' 
+                    : 'text-muted-foreground hover:text-primary'"
+                  :title="t('translation.file')"
+                >
+                  <FileText 
+                    class="w-4 h-4 transition-colors duration-300" 
+                  />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  @click="translationParams.source = 'Link'" 
+                  class="transition-all duration-300 rounded-md hover:bg-background/50"
+                  :class="translationParams.source === 'Link' 
+                    ? 'bg-background shadow-sm text-primary' 
+                    : 'text-muted-foreground hover:text-primary'"
+                  :title="t('translation.link')"
+                >
+                  <LinkIcon 
+                    class="w-4 h-4 transition-colors duration-300" 
+                  />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" />
@@ -668,9 +710,18 @@ onKeyStroke(['l', 'L'], (e) => {
                       <RefreshCw class="w-4 h-4 mr-2" />
                       {{ t('translation.retry') || 'Retry' }}
                     </Button>
-                    <Button variant="outline" size="sm" @click="resetTranslation" class="flex-1 sm:flex-none bg-background hover:bg-accent text-foreground border-input">
-                      {{ t('translation.startNew') || 'Start New' }}
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <Button variant="outline" size="sm" @click="resetTranslation" class="flex-1 sm:flex-none bg-background hover:bg-accent text-foreground border-input">
+                            {{ t('translation.startNew') || 'Start New' }}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{{ t('shortcuts.new') }} (⌘/Ctrl + N / R)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                  </div>
               </div>
 

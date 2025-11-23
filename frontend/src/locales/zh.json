@@ -4,17 +4,17 @@
     "subtitle": "测试版"
   },
   "fileSelector": {
-    "clickToUpload": "选择",
-    "dragAndDrop": "或 拖拽 文件到此处",
-    "subtitle": "松开后将立即开始翻译"
+    "clickToUpload": "拖拽或点击上传 PDF 文件",
+    "dragAndDrop": "翻译将立即开始",
+    "subtitle": "翻译将立即开始"
   },
   "translation": {
     "options": "翻译",
-    "optionsDescription": "",
+    "optionsDescription": "本地文件或链接",
     "file": "文件",
     "link": "链接",
     "pdfLink": "",
-    "pdfLinkPlaceholder": "https://example.com/paper.pdf",
+    "pdfLinkPlaceholder": "https://link.com/to.your.pdf",
     "from": "源语言",
     "to": "目标语言",
     "swapLanguages": "交换语言",
@@ -98,6 +98,7 @@
     "install": "安装应用"
   },
   "shortcuts": {
+    "title": "快捷键",
     "language": "切换语言",
     "theme": "切换夜间模式",
     "settings": "打开设置",

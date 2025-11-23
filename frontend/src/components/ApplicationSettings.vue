@@ -68,23 +68,6 @@ const alternatingPages = computed({
   }
 })
 
-// Animation direction logic
-const transitionName = ref('slide-right')
-
-const outputModeIndex = computed(() => {
-  if (alternatingPages.value) return 2
-  if (bilingual.value) return 1
-  return 0
-})
-
-watch(outputModeIndex, (newVal, oldVal) => {
-  if (newVal > oldVal) {
-    transitionName.value = 'slide-left'
-  } else {
-    transitionName.value = 'slide-right'
-  }
-})
-
 // Rate limiting
 const qps = computed({
   get: () => model.value?.qps || '',
@@ -345,12 +328,10 @@ const currentServiceFields = computed(() => {
           </div>
 
           <div class="overflow-hidden">
-            <Transition :name="transitionName">
-              <div class="flex items-center justify-between pt-2" v-if="bilingual">
-                <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
-                <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
-              </div>
-            </Transition>
+            <div class="flex items-center justify-between pt-2" v-if="bilingual">
+              <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
+              <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -533,32 +514,4 @@ const currentServiceFields = computed(() => {
 </template>
 
 <style scoped>
-/* Slide Left: Enter from Right, Leave to Left */
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: all 0.3s ease-in-out;
-}
-
-.slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-/* Slide Right: Enter from Left, Leave to Right */
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-20px);
-}
-
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
 </style>

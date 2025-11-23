@@ -22,7 +22,7 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  isWCO: {
+  isWco: {
     type: Boolean,
     default: false
   }
@@ -59,15 +59,15 @@ const toggleTheme = () => {
 
 <template>
   <header 
-    class="relative z-50 flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-    :class="{ 'wco-header': isWCO }"
+    class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    :class="{ 'wco-header': isWco }"
   >
     <div class="flex items-center gap-2">
-      <h1 v-if="!isWCO" class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
+      <h1 v-if="!isWco" class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
       <!-- <span class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</span> -->
 
     </div>
-    <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWCO }">
+    <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWco }">
       <PWAInstallButton />
       <TooltipProvider>
         <DropdownMenu>
@@ -184,12 +184,23 @@ const toggleTheme = () => {
   top: 0;
   left: env(titlebar-area-x, 0);
   width: env(titlebar-area-width, 100%);
-  height: env(titlebar-area-height, 33px);
-  padding: 0 1rem;
-  background: transparent;
-  border-bottom: none;
+  height: env(titlebar-area-height, auto);
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid hsl(var(--border));
   -webkit-app-region: drag;
   app-region: drag;
+}
+
+/* Ensure header is always visible even if env vars aren't set */
+@supports not (height: env(titlebar-area-height)) {
+  .wco-header {
+    position: sticky;
+    height: auto;
+    min-height: 3rem;
+  }
 }
 
 .app-no-drag {
