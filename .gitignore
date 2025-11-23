@@ -174,3 +174,4 @@ uv.lock
 *.pdf
 *.docx
 CLAUDE.md
+frontend/outputs/

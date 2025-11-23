@@ -7,7 +7,7 @@
     "clickToUpload": "Click to upload or drop a PDF file here",
     "dragAndDrop": "Translation will start immediately.",
     "subtitle": "The translation will start immediately.",
-    "currentService": "Using",
+    "currentService": "Using ",
     "changeService": "Chnage Service",
     "freeService": "free service sponsored by",
     "devSponsor": "Development sponsored by"
@@ -124,12 +124,12 @@
   },
   "service": {
     "status": {
-      "ready": "Service found & communicatable",
-      "busy": "Busy / Translating",
+      "ready": "Service found",
+      "busy": "Busy",
       "error": "Error",
       "unknown": "Unknown Status"
     },
-    "cpu": "CPU Load",
+    "cpu": "CPU",
     "memory": "Memory",
     "activeTasks": "Active Tasks",
     "pendingTasks": "Pending Tasks",
