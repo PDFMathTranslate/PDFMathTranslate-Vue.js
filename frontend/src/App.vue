@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Header from '@/components/Header.vue'
 import TranslationOptions from '@/components/TranslationOptions.vue'
@@ -13,7 +13,20 @@ import api from '@/services/api'
 import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 
+import { useColorMode } from '@vueuse/core'
+
 const { t, locale } = useI18n()
+
+const colorMode = useColorMode()
+
+// Sync meta theme-color with color mode
+watch(colorMode, (newMode) => {
+  const themeColor = newMode === 'dark' ? '#18181b' : '#ffffff'
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', themeColor)
+  }
+}, { immediate: true })
 
 const config = ref(null)
 const selectedFile = ref(null)
@@ -21,6 +34,8 @@ const isTranslating = ref(false)
 const taskId = ref(null)
 const taskStatus = ref(null)
 const logs = ref([])
+const stages = ref([])
+const currentStage = ref(null)
 const downloadUrl = ref(null)
 const monoPdfUrl = ref(null)
 const dualPdfUrl = ref(null)
@@ -31,6 +46,59 @@ const serviceStatus = ref('ready') // ready, busy, error
 const showSettings = ref(false)
 const isSaved = ref(false)
 const isLanguageSwitching = ref(false)
+
+// Preview URL for selected file
+const selectedFilePreviewUrl = ref(null)
+
+watch(selectedFile, (newFile) => {
+    // Revoke previous URL to avoid memory leaks
+    if (selectedFilePreviewUrl.value) {
+        URL.revokeObjectURL(selectedFilePreviewUrl.value)
+        selectedFilePreviewUrl.value = null
+    }
+    
+    if (newFile && newFile instanceof File) {
+        selectedFilePreviewUrl.value = URL.createObjectURL(newFile)
+    }
+})
+
+// Clean up on unmount
+onUnmounted(() => {
+    if (selectedFilePreviewUrl.value) {
+        URL.revokeObjectURL(selectedFilePreviewUrl.value)
+    }
+})
+
+const isWCO = ref(false)
+
+const checkWCO = () => {
+  if ('windowControlsOverlay' in navigator) {
+    isWCO.value = navigator.windowControlsOverlay.visible
+  }
+}
+
+onMounted(async () => {
+  checkWCO()
+  if ('windowControlsOverlay' in navigator) {
+    navigator.windowControlsOverlay.addEventListener('geometrychange', checkWCO)
+  }
+
+  try {
+    const response = await api.getConfig()
+    config.value = response.data
+    serviceStatus.value = 'ready'
+    // Initialize defaults if needed
+  } catch (error) {
+    console.error('Failed to load config:', error)
+    serviceStatus.value = 'error'
+  }
+})
+
+onUnmounted(() => {
+  if ('windowControlsOverlay' in navigator) {
+    navigator.windowControlsOverlay.removeEventListener('geometrychange', checkWCO)
+  }
+})
 
 // Load preferences from localStorage
 const loadPreferences = () => {
@@ -110,7 +178,7 @@ watch(
   { deep: true }
 )
 
-onMounted(async () => {
+  onMounted(async () => {
   try {
     const response = await api.getConfig()
     config.value = response.data
@@ -158,40 +226,104 @@ watch(() => translationParams.url, async (newUrl, oldUrl) => {
   }
 })
 
-// Extract overall_progress from logs
-const extractOverallProgress = (logEntries) => {
-  if (!logEntries || logEntries.length === 0) return null
-  
-  // Look for progress events in logs (progress_start, progress_update, progress_end)
-  // Log format: {'type': 'progress_end', ..., 'overall_progress': 94.41624365482232, ...}
-  for (let i = logEntries.length - 1; i >= 0; i--) {
-    const log = logEntries[i]
-    if (typeof log !== 'string') continue
-    
-    // Check if this is a progress event
-    if (log.includes('progress_start') || log.includes('progress_update') || log.includes('progress_end')) {
-      // Extract overall_progress value using regex
-      // Pattern: 'overall_progress': <number> or "overall_progress": <number>
-      // Handle both single and double quotes, and decimal numbers with full precision
-      const match = log.match(/['"]overall_progress['"]\s*[:=]\s*(\d+\.?\d+|\d+)/)
-      if (match && match[1]) {
-        const progressValue = parseFloat(match[1])
-        // Ensure it's a valid number
-        if (!isNaN(progressValue) && isFinite(progressValue)) {
-          return progressValue
-        }
+// Process logs to extract stages and progress
+const processLogs = (logEntries) => {
+  if (!logEntries || logEntries.length === 0) return
+
+  let foundStages = [...stages.value]
+  let current = currentStage.value
+  let overall = overallProgress.value
+
+  // Helper to parse Python-dict-like strings
+  const parseLogEntry = (logStr) => {
+    try {
+      // Try standard JSON first
+      if (logStr.startsWith('{') && logStr.includes('"type"')) {
+         try { return JSON.parse(logStr) } catch(e){}
       }
+      
+      // Handle Python dict string format
+      // Replace None/True/False with JS equivalents
+      const sanitized = logStr
+          .replace(/: None/g, ': null')
+          .replace(/: True/g, ': true')
+          .replace(/: False/g, ': false')
+      
+      // Use new Function to parse loosely
+      // This handles single quotes used in Python dicts
+      return new Function('return ' + sanitized)()
+    } catch (e) {
+      return null
     }
   }
-  return null
+
+  // Iterate through all logs to rebuild state
+  // Optimization: only process new logs if we could track index, but here we process all for correctness
+  // In a real app with many logs, we should optimize. For now, it's fine.
+  logEntries.forEach(log => {
+    if (typeof log !== 'string') return
+    
+    // Check if it's a progress-related log before parsing to save perf
+    if (!log.includes('type') && !log.includes('stage')) return
+
+    const data = parseLogEntry(log)
+    if (!data) return
+
+    if (data.type === 'stage_summary') {
+      // Only set stages if not already set or if different
+      if (foundStages.length === 0) {
+        foundStages = data.stages.map(s => ({
+            name: s.name,
+            percent: s.percent,
+            status: 'pending'
+        }))
+      }
+    } else if (data.type === 'progress_start') {
+      current = data.stage
+      if (foundStages.length > 0) {
+        const s = foundStages.find(st => st.name === data.stage)
+        if (s) {
+            s.status = 'active'
+            // Mark previous stages as completed
+            const idx = foundStages.findIndex(st => st.name === data.stage)
+            if (idx > 0) {
+                for(let i=0; i<idx; i++) {
+                    if (foundStages[i].status !== 'completed') {
+                        foundStages[i].status = 'completed'
+                    }
+                }
+            }
+        }
+      }
+      if (data.overall_progress !== undefined) overall = data.overall_progress
+    } else if (data.type === 'progress_update') {
+      if (data.overall_progress !== undefined) overall = data.overall_progress
+    } else if (data.type === 'progress_end') {
+      if (foundStages.length > 0) {
+        const s = foundStages.find(st => st.name === data.stage)
+        if (s) s.status = 'completed'
+      }
+      if (data.overall_progress !== undefined) overall = data.overall_progress
+    }
+  })
+
+  // Update state
+  if (foundStages.length > 0) {
+    stages.value = foundStages
+  }
+  
+  if (current) {
+    currentStage.value = current
+  }
+
+  if (overall !== null) {
+    overallProgress.value = overall
+  }
 }
 
 // Watch logs to extract progress
 watch(logs, (newLogs) => {
-  const progress = extractOverallProgress(newLogs)
-  if (progress !== null) {
-    overallProgress.value = progress
-  }
+  processLogs(newLogs)
 }, { deep: true })
 
 const startTranslation = async () => {
@@ -201,6 +333,8 @@ const startTranslation = async () => {
   isTranslating.value = true
   serviceStatus.value = 'busy'
   logs.value = []
+  stages.value = []
+  currentStage.value = null
   overallProgress.value = null
   downloadUrl.value = null
   monoPdfUrl.value = null
@@ -302,11 +436,6 @@ const pollStatus = async () => {
       overallProgress.value = null
       logs.value.push(`Error: ${response.data.error}`)
     } else {
-      // Extract progress from updated logs
-      const progress = extractOverallProgress(logs.value)
-      if (progress !== null) {
-        overallProgress.value = progress
-      }
       setTimeout(pollStatus, 1000)
     }
   } catch (error) {
@@ -321,6 +450,8 @@ const resetTranslation = () => {
   taskId.value = null
   taskStatus.value = null
   logs.value = []
+  stages.value = []
+  currentStage.value = null
   overallProgress.value = null
   downloadUrl.value = null
   monoPdfUrl.value = null
@@ -393,9 +524,9 @@ const handleLanguageChange = (langCode) => {
     class="min-h-screen bg-background font-sans antialiased overflow-x-hidden transition-opacity duration-200 flex flex-col"
     :class="{ 'opacity-0': isLanguageSwitching, 'opacity-100': !isLanguageSwitching }"
   >
-    <Header :show-settings="showSettings" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
+    <Header :show-settings="showSettings" :is-w-c-o="isWCO" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
     
-    <main class="container py-10 mx-auto px-6 flex-1">
+    <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWCO }">
       <Transition name="fade" mode="out-in">
         <div v-if="!showSettings" key="main" class="max-w-4xl mx-auto space-y-8">
           <!-- Translation Options - Hidden when translation starts or is in progress -->
@@ -414,7 +545,7 @@ const handleLanguageChange = (langCode) => {
             <CardHeader>
               <CardTitle class="flex items-center gap-2">
                 <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
-                {{ t('translation.translating') }}
+                {{ currentStage || t('translation.translating') }}
               </CardTitle>
               <CardDescription v-if="overallProgress !== null">
                 {{ overallProgress.toFixed(1) }}% {{ t('translation.complete') || 'complete' }}
@@ -425,6 +556,33 @@ const handleLanguageChange = (langCode) => {
                   <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
               </div>
               
+              <!-- Stages List -->
+              <div v-if="stages.length > 0" class="space-y-2 mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div v-for="(stage, index) in stages" :key="index" class="flex items-center gap-2 text-sm p-2 rounded hover:bg-muted/50 transition-colors">
+                   <div class="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                     <Check v-if="stage.status === 'completed'" class="h-4 w-4 text-green-500" />
+                     <Loader2 v-else-if="stage.status === 'active'" class="h-4 w-4 animate-spin text-blue-500" />
+                     <div v-else class="h-2 w-2 rounded-full bg-muted-foreground/30"></div>
+                   </div>
+                   <span :class="{
+                     'text-foreground font-medium': stage.status === 'active',
+                     'text-muted-foreground': stage.status === 'pending',
+                     'text-green-600': stage.status === 'completed'
+                   }">{{ stage.name }}</span>
+                </div>
+              </div>
+
+              <!-- Original File Preview -->
+              <div v-if="selectedFilePreviewUrl" class="space-y-2">
+                  <p class="text-sm text-muted-foreground">{{ t('translation.originalFilePreview') }}</p>
+                  <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container">
+                      <VuePdfEmbed 
+                          :source="selectedFilePreviewUrl"
+                          class="w-full"
+                      />
+                  </div>
+              </div>
+
               <div v-if="logs.length > 0" class="flex flex-col gap-2">
                   <Button 
                       variant="ghost" 
@@ -493,7 +651,7 @@ const handleLanguageChange = (langCode) => {
 
               <!-- PDF Preview - Show first page of mono PDF -->
               <div v-if="monoPdfUrl" class="space-y-4">
-                <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container" style="max-height: 600px; overflow-y: auto;">
+                <div class="border rounded-lg overflow-hidden bg-muted/50 p-4 pdf-preview-container">
                   <VuePdfEmbed 
                     :source="monoPdfUrl"
                     class="w-full"
@@ -538,7 +696,7 @@ const handleLanguageChange = (langCode) => {
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,

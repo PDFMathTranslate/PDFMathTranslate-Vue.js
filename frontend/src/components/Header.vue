@@ -15,6 +15,10 @@ const props = defineProps({
   showSettings: {
     type: Boolean,
     default: false
+  },
+  isWCO: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -48,13 +52,16 @@ const toggleTheme = () => {
 </script>
 
 <template>
-  <header class="relative z-50 flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <header 
+    class="relative z-50 flex items-center justify-between px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    :class="{ 'wco-header': isWCO }"
+  >
     <div class="flex items-center gap-2">
-      <h1 class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
+      <h1 v-if="!isWCO" class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
       <!-- <span class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</span> -->
 
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWCO }">
       <PWAInstallButton />
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -139,5 +146,23 @@ const toggleTheme = () => {
 .rotate-fade-leave-to:not(.settings-icon):not(.close-icon):not(.theme-icon-sun):not(.theme-icon-moon) {
   opacity: 0;
   transform: scale(0.8);
+}
+
+.wco-header {
+  position: fixed;
+  top: 0;
+  left: env(titlebar-area-x, 0);
+  width: env(titlebar-area-width, 100%);
+  height: env(titlebar-area-height, 33px);
+  padding: 0 1rem;
+  background: transparent;
+  border-bottom: none;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 </style>

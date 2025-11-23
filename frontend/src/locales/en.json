@@ -22,6 +22,7 @@
     "selectService": "Select service",
     "startTranslation": "Start Translation",
     "translating": "Translating...",
+    "originalFilePreview": "Original File Preview",
     "download": "Download Translated PDF",
     "result": "Translation Result",
     "resultDescription": "Preview and download your translated PDF",
