@@ -31,6 +31,10 @@
   },
   "settings": {
     "title": "설정",
+    "backendMode": "번역 모드",
+    "backendModeDescription": "안정 버전과 실험 버전 번역 엔진 간 전환",
+    "stable": "안정",
+    "experimental": "실험",
     "outputPreference": "출력 설정",
     "monoOnly": "단일 언어만",
     "dualTranslateFirst": "번역 버전을 먼저",

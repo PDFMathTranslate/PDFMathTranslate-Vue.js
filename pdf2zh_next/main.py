@@ -21,6 +21,27 @@ __version__ = "2.7.1"
 logger = logging.getLogger(__name__)
 
 
+def _get_default_backend_from_cli() -> str:
+    """
+    Determine the default backend based on how the CLI was invoked.
+    - pdf2zh or pdf2zh2: use 'stable' backend
+    - pdf2zh_next: use 'experimental' backend
+    """
+    if len(sys.argv) > 0:
+        command = Path(sys.argv[0]).name.lower()
+        # Strip .exe extension on Windows
+        if command.endswith('.exe'):
+            command = command[:-4]
+        
+        if command in ('pdf2zh', 'pdf2zh2'):
+            return 'stable'
+        elif command == 'pdf2zh_next':
+            return 'experimental'
+    
+    # Default to stable for safety
+    return 'stable'
+
+
 def find_all_files_in_directory(directory_path):
     """
     Recursively search all PDF files in the given directory and return their paths as a list.
@@ -93,7 +114,11 @@ async def main() -> int:
 
         port = settings.gui_settings.server_port if settings.gui_settings.server_port else 7860
         gui_dev = settings.gui_settings.gui_dev if hasattr(settings.gui_settings, 'gui_dev') else False
-        await run_server(port=port, gui_dev=gui_dev)
+        # Determine default backend based on CLI command used
+        # pdf2zh/pdf2zh2 -> stable, pdf2zh_next -> experimental
+        default_backend = _get_default_backend_from_cli()
+        logger.info(f"Starting GUI with default backend: {default_backend}")
+        await run_server(port=port, gui_dev=gui_dev, default_backend=default_backend)
         return 0
 
     assert len(settings.basic.input_files) >= 1, "At least one input file is required"

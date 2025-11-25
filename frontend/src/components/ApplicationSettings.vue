@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Moon, Sun, Laptop } from 'lucide-vue-next'
+import { Moon, Sun, Laptop, FlaskConical, ShieldCheck } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
 const colorMode = useColorMode({
@@ -54,6 +54,15 @@ watch(() => props.openAccordion, (newValue) => {
 const model = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
+})
+
+// Translation backend mode: 'stable' (pdf2zh) or 'experimental' (pdf2zh_next)
+const translationBackend = computed({
+  get: () => model.value?.translationBackend || 'stable',
+  set: (val) => { 
+    if (!model.value) model.value = {}
+    model.value.translationBackend = val 
+  }
 })
 
 const services = computed(() => {
@@ -335,6 +344,40 @@ const currentServiceFields = computed(() => {
     <p class="text-sm text-gray-500"> Settings will be automatically saved. </p>
   </div> -->
   <div class="space-y-6">
+    <!-- Backend Mode Switcher - Placed at the top right of settings -->
+    <div class="flex items-center justify-between pb-4 border-b">
+      <div class="space-y-1">
+        <Label class="text-base font-medium">{{ t('settings.backendMode') }}</Label>
+        <p class="text-sm text-muted-foreground">{{ t('settings.backendModeDescription') }}</p>
+      </div>
+      <div class="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          @click="translationBackend = 'stable'" 
+          class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
+          :class="translationBackend === 'stable' 
+            ? 'bg-background shadow-sm text-primary font-medium' 
+            : 'text-muted-foreground hover:text-primary hover:bg-background/50'"
+        >
+          <ShieldCheck class="w-4 h-4" />
+          {{ t('settings.stable') }}
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          @click="translationBackend = 'experimental'" 
+          class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
+          :class="translationBackend === 'experimental' 
+            ? 'bg-background shadow-sm text-primary font-medium' 
+            : 'text-muted-foreground hover:text-primary hover:bg-background/50'"
+        >
+          <FlaskConical class="w-4 h-4" />
+          {{ t('settings.experimental') }}
+        </Button>
+      </div>
+    </div>
+
     <Accordion type="single" collapsible class="w-full" v-model="accordionValue">
       
       <!-- <AccordionItem value="general">

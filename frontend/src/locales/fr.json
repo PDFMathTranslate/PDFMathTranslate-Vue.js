@@ -31,6 +31,10 @@
   },
   "settings": {
     "title": "Paramètres",
+    "backendMode": "Mode de traduction",
+    "backendModeDescription": "Basculer entre moteur de traduction stable et expérimental",
+    "stable": "Stable",
+    "experimental": "Expérimental",
     "outputPreference": "Préférence de sortie",
     "monoOnly": "Mono-seulement",
     "dualTranslateFirst": "Mettre la version traduite en premier",

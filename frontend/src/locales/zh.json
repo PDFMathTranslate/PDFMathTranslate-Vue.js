@@ -43,6 +43,10 @@
   },
   "settings": {
     "title": "设置",
+    "backendMode": "翻译模式",
+    "backendModeDescription": "在稳定版和实验版翻译引擎之间切换",
+    "stable": "稳定版",
+    "experimental": "实验版",
     "service": "翻译服务",
     "outputPreference": "输出偏好",
     "monoOnly": "仅翻译",

@@ -31,6 +31,10 @@
   },
   "settings": {
     "title": "Настройки",
+    "backendMode": "Режим перевода",
+    "backendModeDescription": "Переключение между стабильным и экспериментальным движком перевода",
+    "stable": "Стабильный",
+    "experimental": "Экспериментальный",
     "outputPreference": "Предпочтения вывода",
     "monoOnly": "Только моно",
     "dualTranslateFirst": "Поместить переведенную версию первой",

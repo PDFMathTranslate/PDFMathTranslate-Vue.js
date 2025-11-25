@@ -43,6 +43,10 @@
   },
   "settings": {
     "title": "Settings",
+    "backendMode": "Translation Mode",
+    "backendModeDescription": "Switch between stable and experimental translation engines",
+    "stable": "Stable",
+    "experimental": "Experimental",
     "service": "Translation Service",
     "outputPreference": "Output",
     "monoOnly": "Translated",

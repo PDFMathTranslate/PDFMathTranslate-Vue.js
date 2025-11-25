@@ -773,87 +773,314 @@ async def run_translation(task_id, file_path, ui_inputs):
     service = ui_inputs.get("service")
     lang_from = ui_inputs.get("lang_from")
     lang_to = ui_inputs.get("lang_to")
+    translation_backend = ui_inputs.get("translationBackend", "stable")
     
     tasks[task_id]["status"] = "processing"
-    logger.info(f"Task {task_id}: Starting translation for file {file_path.name}, from {lang_from} to {lang_to} using {service}")
+    logger.info(f"Task {task_id}: Starting translation for file {file_path.name}, from {lang_from} to {lang_to} using {service} (backend: {translation_backend})")
+    
     try:
-        # Load base settings
-        config_manager = ConfigManager()
-        base_settings = config_manager.initialize_cli_config()
-        
-        if "page_range" not in ui_inputs:
-            ui_inputs["page_range"] = "All" # Default
-
-        
-        # Build settings
-        settings = _build_translate_settings(
-            base_settings,
-            file_path,
-            OUTPUT_DIR,
-            SaveMode.never,
-            ui_inputs
-        )
-        
-        # Run translation
-        mono_pdf_path = None
-        dual_pdf_path = None
-        async for event in do_translate_async_stream(settings, file_path):
-            # Log the event
-            if isinstance(event, dict):
-                event_type = event.get("type")
-                event_str = str(event)
-                tasks[task_id]["logs"].append(event_str)
-                logger.info(f"Task {task_id}: {event_str}")
-                
-                # Capture output file paths from finish event
-                if event_type == "finish":
-                    result = event.get("translate_result")
-                    if result:
-                        mono_pdf_path = result.mono_pdf_path
-                        dual_pdf_path = result.dual_pdf_path
-                        if mono_pdf_path:
-                            tasks[task_id]["mono_pdf_path"] = str(mono_pdf_path)
-                        if dual_pdf_path:
-                            tasks[task_id]["dual_pdf_path"] = str(dual_pdf_path)
-            else:
-                event_str = str(event)
-                tasks[task_id]["logs"].append(event_str)
-                logger.info(f"Task {task_id}: {event_str}")
-        
-        tasks[task_id]["status"] = "completed"
-        logger.info(f"Task {task_id}: Translation completed successfully")
-        
-        # If we didn't capture paths from events, try to find them
-        if not mono_pdf_path and not dual_pdf_path:
-            # Look for files in OUTPUT_DIR matching the pattern
-            pattern = f"{file_path.stem}*.pdf"
-            matching_files = list(OUTPUT_DIR.glob(pattern))
-            if matching_files:
-                # Try to identify mono and dual files by name
-                for pdf_file in matching_files:
-                    if ".mono." in pdf_file.name and not mono_pdf_path:
-                        mono_pdf_path = pdf_file
-                        tasks[task_id]["mono_pdf_path"] = str(mono_pdf_path)
-                    elif ".dual." in pdf_file.name and not dual_pdf_path:
-                        dual_pdf_path = pdf_file
-                        tasks[task_id]["dual_pdf_path"] = str(dual_pdf_path)
-                
-                # If still not found, use the most recent file as fallback
-                if not mono_pdf_path and not dual_pdf_path:
-                    output_file = max(matching_files, key=lambda p: p.stat().st_mtime)
-                    tasks[task_id]["mono_pdf_path"] = str(output_file)
-
+        if translation_backend == "stable":
+            # Use stable pdf2zh backend
+            await run_stable_translation(task_id, file_path, ui_inputs)
+        else:
+            # Use experimental pdf2zh_next backend
+            await run_experimental_translation(task_id, file_path, ui_inputs)
     except asyncio.CancelledError:
         logger.info(f"Task {task_id}: Translation cancelled")
         tasks[task_id]["status"] = "cancelled"
         tasks[task_id]["logs"].append("Translation cancelled by user")
-        # No need to re-raise, as we are the top-level task handler for this background op
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Task {task_id}: Translation failed: {error_msg}")
         tasks[task_id]["status"] = "failed"
         tasks[task_id]["error"] = error_msg
         tasks[task_id]["logs"].append(f"Error: {error_msg}")
+
+
+async def run_experimental_translation(task_id, file_path, ui_inputs):
+    """Run translation using experimental pdf2zh_next backend"""
+    # Load base settings
+    config_manager = ConfigManager()
+    base_settings = config_manager.initialize_cli_config()
+    
+    if "page_range" not in ui_inputs:
+        ui_inputs["page_range"] = "All" # Default
+    
+    # Build settings
+    settings = _build_translate_settings(
+        base_settings,
+        file_path,
+        OUTPUT_DIR,
+        SaveMode.never,
+        ui_inputs
+    )
+    
+    # Run translation
+    mono_pdf_path = None
+    dual_pdf_path = None
+    async for event in do_translate_async_stream(settings, file_path):
+        # Log the event
+        if isinstance(event, dict):
+            event_type = event.get("type")
+            event_str = str(event)
+            tasks[task_id]["logs"].append(event_str)
+            logger.info(f"Task {task_id}: {event_str}")
+            
+            # Capture output file paths from finish event
+            if event_type == "finish":
+                result = event.get("translate_result")
+                if result:
+                    mono_pdf_path = result.mono_pdf_path
+                    dual_pdf_path = result.dual_pdf_path
+                    if mono_pdf_path:
+                        tasks[task_id]["mono_pdf_path"] = str(mono_pdf_path)
+                    if dual_pdf_path:
+                        tasks[task_id]["dual_pdf_path"] = str(dual_pdf_path)
+        else:
+            event_str = str(event)
+            tasks[task_id]["logs"].append(event_str)
+            logger.info(f"Task {task_id}: {event_str}")
+    
+    tasks[task_id]["status"] = "completed"
+    logger.info(f"Task {task_id}: Translation completed successfully (experimental backend)")
+    
+    # If we didn't capture paths from events, try to find them
+    if not mono_pdf_path and not dual_pdf_path:
+        # Look for files in OUTPUT_DIR matching the pattern
+        pattern = f"{file_path.stem}*.pdf"
+        matching_files = list(OUTPUT_DIR.glob(pattern))
+        if matching_files:
+            # Try to identify mono and dual files by name
+            for pdf_file in matching_files:
+                if ".mono." in pdf_file.name and not mono_pdf_path:
+                    mono_pdf_path = pdf_file
+                    tasks[task_id]["mono_pdf_path"] = str(mono_pdf_path)
+                elif ".dual." in pdf_file.name and not dual_pdf_path:
+                    dual_pdf_path = pdf_file
+                    tasks[task_id]["dual_pdf_path"] = str(dual_pdf_path)
+            
+            # If still not found, use the most recent file as fallback
+            if not mono_pdf_path and not dual_pdf_path:
+                output_file = max(matching_files, key=lambda p: p.stat().st_mtime)
+                tasks[task_id]["mono_pdf_path"] = str(output_file)
+
+
+async def run_stable_translation(task_id, file_path, ui_inputs):
+    """Run translation using stable pdf2zh backend"""
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
+    
+    service = ui_inputs.get("service")
+    lang_from = ui_inputs.get("lang_from")
+    lang_to = ui_inputs.get("lang_to")
+    page_range = ui_inputs.get("page_range", "All")
+    page_input = ui_inputs.get("page_input", "")
+    threads = ui_inputs.get("threads", 4)
+    skip_subset_fonts = ui_inputs.get("skip_subset_fonts", False)
+    ignore_cache = ui_inputs.get("ignoreCache", False)
+    vfont = ui_inputs.get("vfont", "")
+    prompt = ui_inputs.get("prompt", "")
+    no_dual = ui_inputs.get("noDual", False)
+    no_mono = ui_inputs.get("noMono", False)
+    
+    # Import pdf2zh components
+    try:
+        from pdf2zh.high_level import translate as pdf2zh_translate
+        from pdf2zh.doclayout import ModelInstance
+    except ImportError as e:
+        logger.error(f"Task {task_id}: Failed to import pdf2zh: {e}")
+        raise ImportError("pdf2zh is not installed. Please install it with: pip install pdf2zh") from e
+    
+    # Stable mode language map (pdf2zh uses different codes)
+    stable_lang_map = {
+        "English": "en",
+        "Simplified Chinese": "zh",
+        "Traditional Chinese": "zh-TW",
+        "Traditional Chinese - Hong Kong": "zh-HK",
+        "Traditional Chinese - Taiwan": "zh-TW",
+        "Japanese": "ja",
+        "Korean": "ko",
+        "French": "fr",
+        "German": "de",
+        "Russian": "ru",
+        "Spanish": "es",
+        "Italian": "it",
+        "Portuguese": "pt",
+    }
+    
+    # Stable mode service map
+    stable_service_map = {
+        "Google": "Google",
+        "Bing": "Bing",
+        "DeepL": "DeepL",
+        "DeepLX": "DeepLX",
+        "Ollama": "Ollama",
+        "Xinference": "Xinference",
+        "AzureOpenAI": "AzureOpenAI",
+        "OpenAI": "OpenAI",
+        "Zhipu": "Zhipu",
+        "ModelScope": "ModelScope",
+        "SiliconFlow": "Silicon",
+        "SiliconFlowFree": "Silicon",
+        "Gemini": "Gemini",
+        "Azure": "Azure",
+        "TencentMechineTranslation": "Tencent",
+        "Dify": "Dify",
+        "AnythingLLM": "AnythingLLM",
+        "Grok": "Grok",
+        "Groq": "Groq",
+        "DeepSeek": "DeepSeek",
+        "OpenAICompatible": "OpenAI-liked",
+        "QwenMt": "Ali Qwen-Translation",
+    }
+    
+    # Stable mode page map
+    stable_page_map = {
+        "All": None,
+        "First": [0],
+        "First 5 pages": list(range(0, 5)),
+        "Range": None,
+    }
+    
+    # Prepare parameters
+    source_lang = stable_lang_map.get(lang_from, "en")
+    target_lang = stable_lang_map.get(lang_to, "zh")
+    
+    # Handle page selection
+    if page_range == "Range" and page_input:
+        selected_pages = []
+        for p in page_input.split(","):
+            p = p.strip()
+            if "-" in p:
+                start, end = p.split("-")
+                start = int(start) - 1 if start else 0
+                end = int(end) if end else -1
+                if end == -1:
+                    selected_pages.append(start)
+                else:
+                    selected_pages.extend(range(start, end))
+            else:
+                selected_pages.append(int(p) - 1)
+    else:
+        selected_pages = stable_page_map.get(page_range)
+    
+    # Get translated service name
+    translated_service = stable_service_map.get(service, "Google")
+    
+    # Prepare output paths
+    filename = file_path.stem
+    file_mono = OUTPUT_DIR / f"{filename}-mono.pdf"
+    file_dual = OUTPUT_DIR / f"{filename}-dual.pdf"
+    
+    # Prepare environment variables for the translator
+    envs = {}
+    # Copy relevant API keys and settings from ui_inputs
+    for key, value in ui_inputs.items():
+        if value and isinstance(value, str) and (
+            "api_key" in key.lower() or 
+            "apikey" in key.lower() or 
+            "model" in key.lower() or 
+            "url" in key.lower() or
+            "host" in key.lower() or
+            "endpoint" in key.lower()
+        ):
+            envs[key] = value
+    
+    # Prepare translation parameters for pdf2zh
+    def progress_callback(t):
+        """Callback for translation progress"""
+        desc = getattr(t, "desc", "Translating...")
+        if desc == "":
+            desc = "Translating..."
+        progress = t.n / t.total if t.total > 0 else 0
+        tasks[task_id]["logs"].append(str({
+            "type": "progress_update",
+            "stage": desc,
+            "progress": progress * 100,
+            "overall_progress": progress * 100
+        }))
+    
+    try:
+        threads_num = int(threads) if threads else 4
+    except (ValueError, TypeError):
+        threads_num = 4
+    
+    # Create the translation parameters
+    translate_params = {
+        "files": [str(file_path)],
+        "pages": selected_pages,
+        "lang_in": source_lang,
+        "lang_out": target_lang,
+        "service": translated_service,
+        "output": str(OUTPUT_DIR),
+        "thread": threads_num,
+        "callback": progress_callback,
+        "envs": envs,
+        "skip_subset_fonts": skip_subset_fonts,
+        "ignore_cache": ignore_cache,
+    }
+    
+    if vfont:
+        translate_params["vfont"] = vfont
+    if prompt:
+        from string import Template
+        translate_params["prompt"] = Template(prompt)
+    
+    # Try to get the model instance
+    try:
+        translate_params["model"] = ModelInstance.value
+    except Exception:
+        pass  # Model instance not available
+    
+    tasks[task_id]["logs"].append(str({
+        "type": "stage_summary",
+        "stages": [
+            {"name": "Preparing", "percent": 10},
+            {"name": "Translating", "percent": 80},
+            {"name": "Finalizing", "percent": 10}
+        ]
+    }))
+    
+    tasks[task_id]["logs"].append(str({
+        "type": "progress_start",
+        "stage": "Translating",
+        "overall_progress": 0
+    }))
+    
+    # Run translation in a thread pool to not block the event loop
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        await loop.run_in_executor(executor, lambda: pdf2zh_translate(**translate_params))
+    
+    tasks[task_id]["logs"].append(str({
+        "type": "progress_end",
+        "stage": "Translating",
+        "overall_progress": 100
+    }))
+    
+    # Check for output files
+    if file_mono.exists() and not no_mono:
+        tasks[task_id]["mono_pdf_path"] = str(file_mono)
+    if file_dual.exists() and not no_dual:
+        tasks[task_id]["dual_pdf_path"] = str(file_dual)
+    
+    # Fallback: look for files with language suffix pattern
+    if "mono_pdf_path" not in tasks[task_id] and "dual_pdf_path" not in tasks[task_id]:
+        pattern = f"{filename}*.pdf"
+        matching_files = list(OUTPUT_DIR.glob(pattern))
+        for pdf_file in matching_files:
+            if pdf_file.name != file_path.name:
+                if "-mono" in pdf_file.name:
+                    tasks[task_id]["mono_pdf_path"] = str(pdf_file)
+                elif "-dual" in pdf_file.name:
+                    tasks[task_id]["dual_pdf_path"] = str(pdf_file)
+                else:
+                    # Use as mono if no specific type
+                    if "mono_pdf_path" not in tasks[task_id]:
+                        tasks[task_id]["mono_pdf_path"] = str(pdf_file)
+    
+    tasks[task_id]["status"] = "completed"
+    logger.info(f"Task {task_id}: Translation completed successfully (stable backend)")
 
 
 @app.get("/api/status/{task_id}")
@@ -941,12 +1168,28 @@ async def download_task_dual(task_id: str):
 # Store dev mode flag (set when server starts with --gui-dev)
 _gui_dev_mode = False
 
+# Store default backend mode: 'stable' (pdf2zh) or 'experimental' (pdf2zh_next)
+# Default is 'stable' when started with pdf2zh, 'experimental' when started with pdf2zh_next --gui
+_default_backend_mode = 'stable'
+
 def set_gui_dev_mode(enabled: bool):
     global _gui_dev_mode
     _gui_dev_mode = enabled
 
 def get_gui_dev_mode() -> bool:
     return _gui_dev_mode
+
+def set_default_backend_mode(mode: str):
+    """Set the default backend mode ('stable' or 'experimental')"""
+    global _default_backend_mode
+    if mode in ('stable', 'experimental'):
+        _default_backend_mode = mode
+    else:
+        logger.warning(f"Invalid backend mode: {mode}, using 'stable'")
+        _default_backend_mode = 'stable'
+
+def get_default_backend_mode() -> str:
+    return _default_backend_mode
 
 # Get all available translation parameters for dev mode
 def _get_all_translation_params():
@@ -998,6 +1241,7 @@ async def get_config():
             "languages": lang_map,
             "services": [x.translate_engine_type for x in TRANSLATION_ENGINE_METADATA],
             "dev_mode": _gui_dev_mode,
+            "default_backend": _default_backend_mode,
         }
         
         # Add detailed params info in dev mode
@@ -1054,7 +1298,7 @@ async def get_health():
             "timestamp": time.time()
         }
 
-async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False):
+async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False, default_backend: str = 'experimental'):
     import uvicorn
     import webbrowser
     import threading
@@ -1063,6 +1307,10 @@ async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False):
     set_gui_dev_mode(gui_dev)
     if gui_dev:
         logger.info("GUI Development Mode enabled")
+    
+    # Set default backend mode
+    set_default_backend_mode(default_backend)
+    logger.info(f"Default backend mode: {default_backend}")
     
     # Determine frontend path
     # Assuming structure:

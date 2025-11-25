@@ -31,6 +31,10 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "backendMode": "Übersetzungsmodus",
+    "backendModeDescription": "Wechseln zwischen stabiler und experimenteller Übersetzungs-Engine",
+    "stable": "Stabil",
+    "experimental": "Experimentell",
     "outputPreference": "Ausgabeeinstellung",
     "monoOnly": "Nur Einsprachig",
     "dualTranslateFirst": "Übersetzte Version zuerst",

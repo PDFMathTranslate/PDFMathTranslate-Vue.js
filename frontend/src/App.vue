@@ -257,6 +257,8 @@ const defaultPreferences = {
   langTo: 'Simplified Chinese',
   service: 'SiliconFlowFree', // Default service
   url: '', // URL for Link source type
+  // Translation backend mode: 'stable' (pdf2zh) or 'experimental' (pdf2zh_next)
+  translationBackend: 'stable', // Default to stable mode
   // Output preferences
   // By default, both mono and dual outputs are enabled
   // noMono: false means mono output is enabled
@@ -329,7 +331,10 @@ watch(
     const response = await api.getConfig()
     config.value = response.data
     serviceStatus.value = 'ready'
-    // Initialize defaults if needed
+    // Set default backend mode from server if not already set in localStorage
+    if (response.data.default_backend && !loadPreferences()?.translationBackend) {
+      translationParams.translationBackend = response.data.default_backend
+    }
   } catch (error) {
     console.error('Failed to load config:', error)
     serviceStatus.value = 'error'
