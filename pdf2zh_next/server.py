@@ -885,8 +885,13 @@ async def run_stable_translation(task_id, file_path, ui_inputs):
     
     # Import pdf2zh components
     try:
-        from pdf2zh.high_level import translate as pdf2zh_translate
-        from pdf2zh.doclayout import ModelInstance
+        from pdf2zh.gui import translate as pdf2zh_translate
+        # Try to import ModelInstance, but it's optional
+        try:
+            from pdf2zh.doclayout import ModelInstance
+        except ImportError:
+            ModelInstance = None
+            logger.info("pdf2zh.doclayout.ModelInstance not available, continuing without it")
     except ImportError as e:
         logger.error(f"Task {task_id}: Failed to import pdf2zh: {e}")
         raise ImportError("pdf2zh is not installed. Please install it with: pip install pdf2zh") from e
@@ -1027,10 +1032,11 @@ async def run_stable_translation(task_id, file_path, ui_inputs):
         translate_params["prompt"] = Template(prompt)
     
     # Try to get the model instance
-    try:
-        translate_params["model"] = ModelInstance.value
-    except Exception:
-        pass  # Model instance not available
+    if ModelInstance is not None:
+        try:
+            translate_params["model"] = ModelInstance.value
+        except Exception:
+            pass  # Model instance not available
     
     tasks[task_id]["logs"].append(str({
         "type": "stage_summary",
@@ -1192,24 +1198,58 @@ def get_default_backend_mode() -> str:
     return _default_backend_mode
 
 
-def is_stable_backend_available() -> bool:
-    """Check if the stable pdf2zh backend is installed and available."""
+def is_stable_backend_available() -> tuple[bool, str | None]:
+    """Check if the stable pdf2zh backend is installed and available.
+    
+    Returns:
+        Tuple of (is_available, error_message)
+    """
     try:
-        from pdf2zh.high_level import translate as pdf2zh_translate
-        return True
-    except ImportError:
-        return False
+        # Try importing the pdf2zh package
+        import pdf2zh
+        logger.info(f"pdf2zh package found: {pdf2zh.__file__}")
+        logger.info(f"pdf2zh version: {getattr(pdf2zh, '__version__', 'unknown')}")
+        
+        # The translate function is in pdf2zh.gui module (not high_level)
+        from pdf2zh.gui import translate as pdf2zh_translate
+        logger.info("pdf2zh.gui.translate imported successfully")
+        
+        # Verify it's callable
+        if callable(pdf2zh_translate):
+            logger.info("pdf2zh stable backend is available and ready")
+            return True, None
+        else:
+            error = "pdf2zh.gui.translate is not callable"
+            logger.warning(error)
+            return False, error
+            
+    except ImportError as e:
+        error = f"ImportError: {e}"
+        logger.info(f"pdf2zh stable backend not available: {error}")
+        return False, error
+    except Exception as e:
+        error = f"Unexpected error: {e}"
+        logger.warning(f"pdf2zh stable backend check failed: {error}")
+        return False, error
 
 
 def get_available_backends() -> dict:
     """Get information about available translation backends."""
-    stable_available = is_stable_backend_available()
+    stable_available, stable_error = is_stable_backend_available()
+    
+    install_hint = None
+    if not stable_available:
+        install_hint = "pip install pdf2zh"
+        if stable_error:
+            logger.info(f"Stable backend not available: {stable_error}")
+    
     return {
         "stable": {
             "available": stable_available,
             "name": "Stable (pdf2zh)",
             "description": "Original pdf2zh translation engine",
-            "install_hint": "pip install pdf2zh-next[stable]" if not stable_available else None
+            "install_hint": install_hint,
+            "error": stable_error if not stable_available else None
         },
         "experimental": {
             "available": True,  # Always available as it's the main package
@@ -1353,6 +1393,74 @@ async def get_health():
             "timestamp": time.time()
         }
 
+
+@app.get("/api/debug/backends")
+async def debug_backends():
+    """Debug endpoint to check backend availability with detailed information."""
+    import sys
+    import importlib
+    
+    result = {
+        "backends": get_available_backends(),
+        "python_path": sys.path[:5],  # First 5 entries
+        "installed_packages": {}
+    }
+    
+    # Check if pdf2zh is in sys.modules
+    result["pdf2zh_in_sys_modules"] = "pdf2zh" in sys.modules
+    
+    # Try to find pdf2zh package info
+    try:
+        import importlib.metadata
+        try:
+            pdf2zh_dist = importlib.metadata.distribution("pdf2zh")
+            result["installed_packages"]["pdf2zh"] = {
+                "version": pdf2zh_dist.version,
+                "location": str(pdf2zh_dist._path) if hasattr(pdf2zh_dist, '_path') else "unknown"
+            }
+        except importlib.metadata.PackageNotFoundError:
+            result["installed_packages"]["pdf2zh"] = {"error": "Package not found in metadata"}
+    except Exception as e:
+        result["installed_packages"]["pdf2zh"] = {"error": str(e)}
+    
+    # Try direct import with detailed error
+    try:
+        # Clear any cached import
+        if "pdf2zh" in sys.modules:
+            result["pdf2zh_cached"] = True
+        
+        import pdf2zh
+        result["pdf2zh_import"] = {
+            "success": True,
+            "file": getattr(pdf2zh, "__file__", "unknown"),
+            "version": getattr(pdf2zh, "__version__", "unknown")
+        }
+        
+        # Try to import gui module (where translate function is)
+        try:
+            from pdf2zh import gui
+            result["pdf2zh_gui"] = {
+                "success": True,
+                "file": getattr(gui, "__file__", "unknown"),
+                "has_translate": hasattr(gui, "translate")
+            }
+            
+            if hasattr(gui, "translate"):
+                result["pdf2zh_translate"] = {
+                    "callable": callable(gui.translate),
+                    "type": str(type(gui.translate))
+                }
+        except Exception as e:
+            result["pdf2zh_gui"] = {"error": str(e)}
+            
+    except ImportError as e:
+        result["pdf2zh_import"] = {"error": f"ImportError: {e}"}
+    except Exception as e:
+        result["pdf2zh_import"] = {"error": f"Exception: {e}"}
+    
+    return result
+
+
 async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False, default_backend: str = 'experimental'):
     import uvicorn
     import webbrowser
@@ -1366,6 +1474,14 @@ async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False, default_b
     # Set default backend mode
     set_default_backend_mode(default_backend)
     logger.info(f"Default backend mode: {default_backend}")
+    
+    # Check and log backend availability at startup
+    backends = get_available_backends()
+    logger.info(f"Backend availability check:")
+    logger.info(f"  - Stable (pdf2zh): {'Available' if backends['stable']['available'] else 'Not available'}")
+    if not backends['stable']['available'] and backends['stable'].get('error'):
+        logger.info(f"    Error: {backends['stable']['error']}")
+    logger.info(f"  - Experimental (pdf2zh_next): Available")
     
     # Determine frontend path
     # Assuming structure:

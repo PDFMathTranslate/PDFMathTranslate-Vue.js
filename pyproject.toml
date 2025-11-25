@@ -49,9 +49,11 @@ dependencies = [
     "psutil>=6.1.1",
 ]
 
-[project.optional-dependencies]
-# Install the original pdf2zh for stable backend support
-stable = ["pdf2zh>=1.9.0"]
+# Note: The stable backend (pdf2zh) can be installed separately if needed:
+#   pip install pdf2zh
+# It is not listed as an optional dependency because pdf2zh has transitive
+# dependencies (onnxruntime) that don't support all Python versions.
+# The GUI will detect if pdf2zh is available at runtime.
 
 [dependency-groups]
 dev = [
