@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
-import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon } from 'lucide-vue-next'
+import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2 } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 import {
   Tooltip,
@@ -60,6 +60,9 @@ const showSettings = ref(false)
 const isSaved = ref(false)
 const isLanguageSwitching = ref(false)
 const openAccordionItem = ref('')
+
+// Recent translated files
+const recentFiles = ref([])
 
 // Preview URL for selected file
 const selectedFilePreviewUrl = ref(null)
@@ -508,6 +511,17 @@ const pollStatus = async () => {
         downloadUrl.value = `/api/download_task/${taskId.value}`
       }
 
+      // Save to recent files
+      const filename = selectedFile.value?.name || translationParams.url || 'Translated PDF'
+      saveToRecentFiles(
+        taskId.value,
+        filename,
+        translationParams.langFrom,
+        translationParams.langTo,
+        !!response.data.mono_pdf_path,
+        !!response.data.dual_pdf_path
+      )
+
       // Automatically download files
       if (monoPdfUrl.value) {
         downloadMono()
@@ -671,6 +685,97 @@ onKeyStroke(['l', 'L'], (e) => {
     document.getElementById('language-menu-trigger')?.click()
   }
 })
+
+// Recent Files Functions
+const loadRecentFiles = () => {
+  const stored = localStorage.getItem('recentTranslations')
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch (e) {
+      console.error('Failed to parse recent translations:', e)
+    }
+  }
+  return []
+}
+
+const saveToRecentFiles = (taskIdValue, filename, langFrom, langTo, hasMonoPdf, hasDualPdf) => {
+  const recent = loadRecentFiles()
+  // Remove existing entry with same taskId if exists
+  const filtered = recent.filter(f => f.taskId !== taskIdValue)
+  // Add new entry at the beginning
+  filtered.unshift({
+    taskId: taskIdValue,
+    filename,
+    timestamp: Date.now(),
+    langFrom,
+    langTo,
+    hasMonoPdf,
+    hasDualPdf
+  })
+  // Keep only the last 5
+  const trimmed = filtered.slice(0, 5)
+  localStorage.setItem('recentTranslations', JSON.stringify(trimmed))
+  recentFiles.value = trimmed
+}
+
+const clearRecentFiles = () => {
+  localStorage.removeItem('recentTranslations')
+  recentFiles.value = []
+}
+
+// Download functions for recent files (by taskId)
+const handleRecentDownload = async (downloadFn, recentTaskId) => {
+  try {
+    const response = await downloadFn(recentTaskId)
+    const blob = new Blob([response.data], { type: response.headers['content-type'] })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    
+    let filename = 'download.pdf'
+    const disposition = response.headers['content-disposition']
+    if (disposition) {
+      const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/)
+      if (utf8Match) {
+        filename = decodeURIComponent(utf8Match[1])
+      } else {
+        const filenameMatch = disposition.match(/filename="?([^"]+)"?/)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+    }
+    
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    
+    setTimeout(() => {
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }, 100)
+  } catch (error) {
+    console.error('Download failed:', error)
+    // If file not found (404), remove from recent files
+    if (error.response && error.response.status === 404) {
+      const recent = recentFiles.value.filter(f => f.taskId !== recentTaskId)
+      localStorage.setItem('recentTranslations', JSON.stringify(recent))
+      recentFiles.value = recent
+    }
+  }
+}
+
+const downloadRecentMono = async (recentTaskId) => {
+  await handleRecentDownload(api.downloadTaskMono, recentTaskId)
+}
+
+const downloadRecentDual = async (recentTaskId) => {
+  await handleRecentDownload(api.downloadTaskDual, recentTaskId)
+}
+
+// Load recent files on component initialization
+recentFiles.value = loadRecentFiles()
 </script>
 
 <template>
@@ -911,6 +1016,67 @@ onKeyStroke(['l', 'L'], (e) => {
               </div>
             </CardContent>
           </Card>
+
+          <!-- Recent Files Section -->
+          <Card v-if="recentFiles.length > 0" class="mt-8">
+            <CardHeader class="flex flex-row items-center justify-between pb-4 space-y-0">
+              <div class="space-y-1.5">
+                <CardTitle>{{ t('recentFiles.title') }}</CardTitle>
+                <CardDescription>{{ t('recentFiles.description') }}</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" @click="clearRecentFiles" class="text-muted-foreground hover:text-destructive">
+                <Trash2 class="h-4 w-4 mr-2" />
+                {{ t('recentFiles.clear') }}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div class="flex flex-wrap justify-start gap-4">
+                <div 
+                  v-for="file in recentFiles" 
+                  :key="file.taskId" 
+                  class="recent-file-card flex flex-col items-center w-40 p-3 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <!-- Preview thumbnail -->
+                  <div class="recent-preview-container w-full h-28 mb-2 border rounded overflow-hidden bg-background">
+                    <VuePdfEmbed 
+                      :source="`/api/download_task/${file.taskId}/mono`"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <!-- File info -->
+                  <p class="text-xs font-medium text-center truncate w-full mb-0.5" :title="file.filename">
+                    {{ file.filename }}
+                  </p>
+                  <p class="text-xs text-muted-foreground mb-2">
+                    {{ file.langFrom }} → {{ file.langTo }}
+                  </p>
+                  <!-- Download buttons -->
+                  <div class="flex gap-1.5 w-full">
+                    <Button 
+                      v-if="file.hasMonoPdf" 
+                      size="sm" 
+                      variant="default"
+                      class="flex-1 text-xs h-7 px-2"
+                      @click="downloadRecentMono(file.taskId)"
+                    >
+                      <Download class="h-3 w-3 mr-1" />
+                      {{ t('recentFiles.mono') }}
+                    </Button>
+                    <Button 
+                      v-if="file.hasDualPdf" 
+                      size="sm" 
+                      variant="outline"
+                      class="flex-1 text-xs h-7 px-2"
+                      @click="downloadRecentDual(file.taskId)"
+                    >
+                      <Download class="h-3 w-3 mr-1" />
+                      {{ t('recentFiles.dual') }}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div v-else key="settings" class="max-w-3xl mx-auto">
@@ -958,5 +1124,43 @@ onKeyStroke(['l', 'L'], (e) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Recent Files Preview Styles */
+.recent-preview-container :deep(.vue-pdf-embed) {
+  width: 100%;
+  height: 100%;
+}
+
+.recent-preview-container :deep(.vue-pdf-embed > div:not(:first-child)) {
+  display: none;
+}
+
+.recent-preview-container :deep(.vue-pdf-embed canvas:not(:first-of-type)) {
+  display: none;
+}
+
+.recent-preview-container :deep(.vue-pdf-embed canvas) {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+:global(.dark) .recent-preview-container :deep(.vue-pdf-embed) {
+  filter: brightness(0.7);
+}
+
+.recent-file-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recent-file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .recent-file-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 </style>

@@ -98,5 +98,12 @@
   },
   "header": {
     "howDoesItWork": "작동 방식은?"
+  },
+  "recentFiles": {
+    "title": "최근 번역",
+    "description": "최근에 번역한 파일",
+    "clear": "지우기",
+    "mono": "번역",
+    "dual": "비교"
   }
 }

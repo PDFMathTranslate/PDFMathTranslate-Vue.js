@@ -98,5 +98,12 @@
   },
   "header": {
     "howDoesItWork": "¿Cómo funciona?"
+  },
+  "recentFiles": {
+    "title": "Traducciones recientes",
+    "description": "Sus archivos traducidos recientemente",
+    "clear": "Borrar",
+    "mono": "Mono",
+    "dual": "Dual"
   }
 }

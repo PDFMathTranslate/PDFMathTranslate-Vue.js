@@ -101,5 +101,12 @@
   },
   "header": {
     "howDoesItWork": "它是如何運作的？"
+  },
+  "recentFiles": {
+    "title": "最近翻譯",
+    "description": "您最近翻譯的檔案",
+    "clear": "清除",
+    "mono": "譯文",
+    "dual": "對照"
   }
 }

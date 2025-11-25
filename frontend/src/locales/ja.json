@@ -100,5 +100,12 @@
   },
   "header": {
     "howDoesItWork": "どのように動作しますか？"
+  },
+  "recentFiles": {
+    "title": "最近の翻訳",
+    "description": "最近翻訳したファイル",
+    "clear": "クリア",
+    "mono": "翻訳",
+    "dual": "対照"
   }
 }

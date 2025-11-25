@@ -134,5 +134,12 @@
     "activeTasks": "Active Tasks",
     "pendingTasks": "Pending Tasks",
     "errorFetchingHealth": "Error fetching health info"
+  },
+  "recentFiles": {
+    "title": "Recent Translations",
+    "description": "Your recently translated files",
+    "clear": "Clear",
+    "mono": "Mono",
+    "dual": "Dual"
   }
 }
