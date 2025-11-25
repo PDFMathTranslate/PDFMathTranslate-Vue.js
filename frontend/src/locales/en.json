@@ -95,6 +95,18 @@
     "skipScannedDetection": "Skip Scanned Detection",
     "ocrWorkaround": "OCR Workaround",
     "autoEnableOcrWorkaround": "Auto Enable OCR Workaround",
+    "serviceComparison": "Service Comparison",
+    "serviceComparisonDescription": "Compare translation quality across different services and disciplines",
+    "serviceComparisonFallback": "Translation for {service} is not available for comparison in this discipline. Using Google as the baseline for comparison.",
+    "sourceEnglish": "Source (English)",
+    "current": "Current",
+    "useService": "Use this service",
+    "disciplines": {
+      "cs": "CS",
+      "biology": "Bio",
+      "econ": "Econ",
+      "communication": "Comm"
+    },
     "resetSettings": "Reset All Settings"
   },
   "language": {

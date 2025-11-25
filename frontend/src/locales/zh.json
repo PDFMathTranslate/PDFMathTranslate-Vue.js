@@ -95,6 +95,18 @@
     "skipScannedDetection": "跳过扫描检测",
     "ocrWorkaround": "使用字符识别方案",
     "autoEnableOcrWorkaround": "自动启用字符识别方案",
+    "serviceComparison": "服务对比",
+    "serviceComparisonDescription": "比较不同服务和学科的翻译质量。高亮显示的差异是相对于当前选择的服务的。",
+    "serviceComparisonFallback": "该学科下暂无 {service} 的翻译结果。将使用 Google 作为对比基准。",
+    "sourceEnglish": "原文 (英语)",
+    "current": "当前",
+    "useService": "使用此服务",
+    "disciplines": {
+      "cs": "计算机",
+      "biology": "生物",
+      "econ": "经济",
+      "communication": "传播"
+    },
     "resetSettings": "重置所有设置"
   },
   "language": {

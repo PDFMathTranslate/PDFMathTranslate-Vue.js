@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Moon, Sun, Laptop, FlaskConical, ShieldCheck } from 'lucide-vue-next'
+import ServiceComparisonCard from './ServiceComparisonCard.vue'
 
 const { t, locale } = useI18n()
 const colorMode = useColorMode({
@@ -549,6 +550,13 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
                 :placeholder="field.placeholder"
               />
             </div>
+
+          <!-- Service Comparison Card -->
+          <ServiceComparisonCard 
+            :current-service="service" 
+            :services="services"
+            @update:current-service="service = $event"
+          />
           </div>
         </AccordionContent>
       </AccordionItem>
