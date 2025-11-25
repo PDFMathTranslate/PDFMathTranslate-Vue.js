@@ -331,8 +331,17 @@ watch(
     const response = await api.getConfig()
     config.value = response.data
     serviceStatus.value = 'ready'
+    
+    const backends = response.data.backends || {}
+    const savedBackend = loadPreferences()?.translationBackend
+    
+    // If user has stable saved but it's not available, switch to experimental
+    if (savedBackend === 'stable' && backends.stable && !backends.stable.available) {
+      console.log('Stable backend not available, switching to experimental')
+      translationParams.translationBackend = 'experimental'
+    }
     // Set default backend mode from server if not already set in localStorage
-    if (response.data.default_backend && !loadPreferences()?.translationBackend) {
+    else if (response.data.default_backend && !savedBackend) {
       translationParams.translationBackend = response.data.default_backend
     }
   } catch (error) {

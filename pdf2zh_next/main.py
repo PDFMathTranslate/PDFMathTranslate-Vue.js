@@ -130,5 +130,69 @@ def cli():
     sys.exit(asyncio.run(main()))
 
 
+async def gui_main() -> int:
+    """Main entry point for GUI-only mode (pdf2zh_gui command).
+    
+    This function starts the GUI directly without needing the --gui flag.
+    It uses 'stable' as the default backend, but users can switch between
+    stable and experimental backends in the GUI settings.
+    """
+    from rich.logging import RichHandler
+
+    logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
+
+    # Initialize config manager to get GUI settings
+    config_mgr = ConfigManager()
+    settings = config_mgr.initialize_config()
+    
+    if settings.basic.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Disable noisy loggers
+    for logger_name in ["httpx", "openai", "httpcore", "http11"]:
+        logging.getLogger(logger_name).setLevel("CRITICAL")
+        logging.getLogger(logger_name).propagate = False
+
+    for v in logging.Logger.manager.loggerDict.values():
+        if getattr(v, "name", None) is None:
+            continue
+        if (
+            v.name.startswith("pdfminer")
+            or v.name.startswith("peewee")
+            or v.name.startswith("httpx")
+            or "http11" in v.name
+            or "openai" in v.name
+            or "pdfminer" in v.name
+        ):
+            v.disabled = True
+            v.propagate = False
+
+    logger.info("Warmup babeldoc assets...")
+    babeldoc.assets.assets.warmup()
+
+    from pdf2zh_next.server import run_server
+
+    port = settings.gui_settings.server_port if settings.gui_settings.server_port else 7860
+    gui_dev = settings.gui_settings.gui_dev if hasattr(settings.gui_settings, 'gui_dev') else False
+    
+    # Use 'stable' as default for the universal GUI launcher
+    # Users can switch backends in the GUI settings
+    default_backend = 'stable'
+    logger.info(f"Starting PDF Math Translate GUI (default backend: {default_backend})")
+    logger.info("You can switch between Stable and Experimental backends in Settings.")
+    
+    await run_server(port=port, gui_dev=gui_dev, default_backend=default_backend)
+    return 0
+
+
+def gui_cli():
+    """CLI entry point for starting the GUI directly.
+    
+    This is invoked by the 'pdf2zh_gui' command and starts the GUI
+    without requiring any command line arguments.
+    """
+    sys.exit(asyncio.run(gui_main()))
+
+
 if __name__ == "__main__":
     cli()

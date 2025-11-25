@@ -1191,6 +1191,33 @@ def set_default_backend_mode(mode: str):
 def get_default_backend_mode() -> str:
     return _default_backend_mode
 
+
+def is_stable_backend_available() -> bool:
+    """Check if the stable pdf2zh backend is installed and available."""
+    try:
+        from pdf2zh.high_level import translate as pdf2zh_translate
+        return True
+    except ImportError:
+        return False
+
+
+def get_available_backends() -> dict:
+    """Get information about available translation backends."""
+    stable_available = is_stable_backend_available()
+    return {
+        "stable": {
+            "available": stable_available,
+            "name": "Stable (pdf2zh)",
+            "description": "Original pdf2zh translation engine",
+            "install_hint": "pip install pdf2zh-next[stable]" if not stable_available else None
+        },
+        "experimental": {
+            "available": True,  # Always available as it's the main package
+            "name": "Experimental (pdf2zh_next)",
+            "description": "Next-generation translation engine with BabelDOC"
+        }
+    }
+
 # Get all available translation parameters for dev mode
 def _get_all_translation_params():
     """Get all available translation parameters with their types and descriptions"""
@@ -1237,11 +1264,39 @@ def _get_all_translation_params():
 @app.get("/api/config")
 async def get_config():
     try:
+        # Get pdf2zh_next version
+        from pdf2zh_next import __version__ as pdf2zh_next_version
+        
+        # Get backend availability info
+        backends = get_available_backends()
+        stable_available = backends["stable"]["available"]
+        
+        # Try to get pdf2zh (stable) version
+        pdf2zh_version = None
+        if stable_available:
+            try:
+                from pdf2zh import __version__ as stable_version
+                pdf2zh_version = stable_version
+            except ImportError:
+                pdf2zh_version = "not installed"
+        else:
+            pdf2zh_version = "not installed"
+        
+        # If stable is not available and default is stable, switch to experimental
+        effective_default = _default_backend_mode
+        if effective_default == "stable" and not stable_available:
+            effective_default = "experimental"
+        
         config_data = {
             "languages": lang_map,
             "services": [x.translate_engine_type for x in TRANSLATION_ENGINE_METADATA],
             "dev_mode": _gui_dev_mode,
-            "default_backend": _default_backend_mode,
+            "default_backend": effective_default,
+            "backends": backends,
+            "versions": {
+                "stable": pdf2zh_version,
+                "experimental": pdf2zh_next_version,
+            },
         }
         
         # Add detailed params info in dev mode

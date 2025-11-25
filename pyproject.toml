@@ -49,6 +49,10 @@ dependencies = [
     "psutil>=6.1.1",
 ]
 
+[project.optional-dependencies]
+# Install the original pdf2zh for stable backend support
+stable = ["pdf2zh>=1.9.0"]
+
 [dependency-groups]
 dev = [
     "pre-commit",
@@ -76,6 +80,7 @@ build-backend = "hatchling.build"
 pdf2zh = "pdf2zh_next.main:cli"
 pdf2zh2 = "pdf2zh_next.main:cli"
 pdf2zh_next = "pdf2zh_next.main:cli"
+pdf2zh_gui = "pdf2zh_next.main:gui_cli"
 
 [tool.flake8]
 ignore = ["E203", "E261", "E501", "W503", "E741"]

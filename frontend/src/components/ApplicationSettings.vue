@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Moon, Sun, Laptop, FlaskConical, ShieldCheck } from 'lucide-vue-next'
 
 const { t, locale } = useI18n()
@@ -64,6 +65,11 @@ const translationBackend = computed({
     model.value.translationBackend = val 
   }
 })
+
+// Backend availability from config
+const backends = computed(() => props.config?.backends || {})
+const isStableAvailable = computed(() => backends.value?.stable?.available ?? false)
+const stableInstallHint = computed(() => backends.value?.stable?.install_hint || 'pip install pdf2zh-next[stable]')
 
 const services = computed(() => {
   return props.config?.services || []
@@ -337,6 +343,10 @@ const serviceFields = {
 const currentServiceFields = computed(() => {
   return serviceFields[service.value] || []
 })
+
+// Version info from config
+const stableVersion = computed(() => props.config?.versions?.stable || 'unknown')
+const experimentalVersion = computed(() => props.config?.versions?.experimental || 'unknown')
 </script>
 
 <template>
@@ -351,30 +361,60 @@ const currentServiceFields = computed(() => {
         <p class="text-sm text-muted-foreground">{{ t('settings.backendModeDescription') }}</p>
       </div>
       <div class="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          @click="translationBackend = 'stable'" 
-          class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
-          :class="translationBackend === 'stable' 
-            ? 'bg-background shadow-sm text-primary font-medium' 
-            : 'text-muted-foreground hover:text-primary hover:bg-background/50'"
-        >
-          <ShieldCheck class="w-4 h-4" />
-          {{ t('settings.stable') }}
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          @click="translationBackend = 'experimental'" 
-          class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
-          :class="translationBackend === 'experimental' 
-            ? 'bg-background shadow-sm text-primary font-medium' 
-            : 'text-muted-foreground hover:text-primary hover:bg-background/50'"
-        >
-          <FlaskConical class="w-4 h-4" />
-          {{ t('settings.experimental') }}
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                @click="isStableAvailable && (translationBackend = 'stable')" 
+                class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
+                :class="[
+                  translationBackend === 'stable' 
+                    ? 'bg-background shadow-sm text-primary font-medium' 
+                    : 'text-muted-foreground hover:text-primary hover:bg-background/50',
+                  !isStableAvailable && 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-muted-foreground'
+                ]"
+                :disabled="!isStableAvailable"
+              >
+                <ShieldCheck class="w-4 h-4" />
+                {{ t('settings.stable') }}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" class="max-w-xs">
+              <template v-if="isStableAvailable">
+                <p class="font-medium">{{ t('settings.stableTooltip') }}</p>
+                <p class="text-xs text-muted-foreground mt-1">pdf2zh v{{ stableVersion }}</p>
+              </template>
+              <template v-else>
+                <p class="font-medium text-amber-600 dark:text-amber-400">{{ t('settings.stableNotAvailable') }}</p>
+                <p class="text-xs text-muted-foreground mt-1">{{ t('settings.installWith') }}: <code class="bg-muted px-1 rounded">{{ stableInstallHint }}</code></p>
+              </template>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                @click="translationBackend = 'experimental'" 
+                class="transition-all duration-300 rounded-md gap-1.5 h-8 px-3"
+                :class="translationBackend === 'experimental' 
+                  ? 'bg-background shadow-sm text-primary font-medium' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-background/50'"
+              >
+                <FlaskConical class="w-4 h-4" />
+                {{ t('settings.experimental') }}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" class="max-w-xs">
+              <p class="font-medium">{{ t('settings.experimentalTooltip') }}</p>
+              <p class="text-xs text-muted-foreground mt-1">pdf2zh_next v{{ experimentalVersion }}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
 
