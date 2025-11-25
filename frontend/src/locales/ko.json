@@ -99,12 +99,24 @@
   "header": {
     "howDoesItWork": "작동 방식은?"
   },
+  "shortcuts": {
+    "title": "단축키",
+    "language": "언어 전환",
+    "theme": "다크 모드 전환",
+    "settings": "설정 열기",
+    "closeSettings": "설정 닫기",
+    "stop": "번역 중지",
+    "new": "새 번역 시작",
+    "downloadMono": "번역 다운로드",
+    "downloadDual": "비교 다운로드"
+  },
   "recentFiles": {
     "title": "최근 번역",
     "description": "최근에 번역한 파일",
     "clear": "지우기",
     "mono": "번역",
-    "dual": "비교"
+    "dual": "비교",
+    "cached": "캐시됨"
   },
   "devMode": {
     "enabled": "개발 모드 활성화",

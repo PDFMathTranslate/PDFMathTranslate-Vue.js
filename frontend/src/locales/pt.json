@@ -99,12 +99,24 @@
   "header": {
     "howDoesItWork": "Como funciona?"
   },
+  "shortcuts": {
+    "title": "Atalhos",
+    "language": "Mudar idioma",
+    "theme": "Alternar modo escuro",
+    "settings": "Abrir configurações",
+    "closeSettings": "Fechar configurações",
+    "stop": "Parar tradução",
+    "new": "Nova tradução",
+    "downloadMono": "Baixar tradução",
+    "downloadDual": "Baixar comparação"
+  },
   "recentFiles": {
     "title": "Traduções recentes",
     "description": "Seus arquivos traduzidos recentemente",
     "clear": "Limpar",
     "mono": "Mono",
-    "dual": "Dual"
+    "dual": "Dual",
+    "cached": "Em cache"
   },
   "devMode": {
     "enabled": "Modo desenvolvedor ativo",

@@ -117,7 +117,9 @@
     "settings": "打开设置",
     "closeSettings": "关闭设置",
     "stop": "停止翻译",
-    "new": "开始新翻译"
+    "new": "开始新翻译",
+    "downloadMono": "下载译文",
+    "downloadDual": "下载对照"
   },
   "header": {
     "howDoesItWork": "它是如何工作的？"
@@ -140,7 +142,8 @@
     "description": "您最近翻译的文件",
     "clear": "清除",
     "mono": "译文",
-    "dual": "对照"
+    "dual": "对照",
+    "cached": "已缓存"
   },
   "devMode": {
     "enabled": "开发模式已激活",

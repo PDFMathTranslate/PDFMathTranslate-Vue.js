@@ -117,7 +117,9 @@
     "settings": "Toggle Settings",
     "closeSettings": "Close Settings",
     "stop": "Stop Translation",
-    "new": "Start New Translation"
+    "new": "Start New Translation",
+    "downloadMono": "Download Translated",
+    "downloadDual": "Download Comparison"
   },
   "header": {
     "howDoesItWork": "How does it work?"
@@ -140,7 +142,8 @@
     "description": "Your recently translated files",
     "clear": "Clear",
     "mono": "Mono",
-    "dual": "Dual"
+    "dual": "Dual",
+    "cached": "Cached"
   },
   "devMode": {
     "enabled": "Dev Mode Active",

@@ -102,12 +102,24 @@
   "header": {
     "howDoesItWork": "它是如何運作的？"
   },
+  "shortcuts": {
+    "title": "快捷鍵",
+    "language": "切換語言",
+    "theme": "切換深色模式",
+    "settings": "開啟設定",
+    "closeSettings": "關閉設定",
+    "stop": "停止翻譯",
+    "new": "開始新翻譯",
+    "downloadMono": "下載譯文",
+    "downloadDual": "下載對照"
+  },
   "recentFiles": {
     "title": "最近翻譯",
     "description": "您最近翻譯的檔案",
     "clear": "清除",
     "mono": "譯文",
-    "dual": "對照"
+    "dual": "對照",
+    "cached": "已快取"
   },
   "devMode": {
     "enabled": "開發模式已啟用",

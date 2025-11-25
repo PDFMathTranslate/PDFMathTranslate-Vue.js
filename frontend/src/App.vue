@@ -25,7 +25,9 @@ import { useColorMode, onKeyStroke } from '@vueuse/core'
 
 const { t, locale } = useI18n()
 
-const colorMode = useColorMode()
+const colorMode = useColorMode({
+  disableTransition: false  // Enable smooth 2s color transitions
+})
 
 // Sync meta theme-color with color mode
 watch(colorMode, (newMode) => {
@@ -56,6 +58,14 @@ const dualPdfUrl = ref(null)
 const isLogsExpanded = ref(false)
 const overallProgress = ref(null)
 const isTranslationComplete = computed(() => taskStatus.value === 'completed')
+
+// Check if user is on the index/home view (no translation in progress or completed)
+const isOnIndex = computed(() => 
+  !isTranslating.value && 
+  overallProgress.value === null && 
+  taskStatus.value !== 'completed' && 
+  taskStatus.value !== 'failed'
+)
 const serviceStatus = ref('ready') // ready, busy, error
 const healthInfo = ref(null) // Store health information including CPU load
 const showSettings = ref(false)
@@ -72,7 +82,7 @@ const devModeFromServer = ref(false)
 const escPressCount = ref(0)
 const escPressTimeout = ref(null)
 const DEV_MODE_ESC_PRESSES = 4
-const ESC_PRESS_TIMEOUT_MS = 1500
+const ESC_PRESS_TIMEOUT_MS = 3000
 
 // Load dev mode preference from localStorage
 const loadDevModePreference = () => {
@@ -549,8 +559,9 @@ const pollStatus = async () => {
         downloadUrl.value = `/api/download_task/${taskId.value}`
       }
 
-      // Save to recent files
+      // Save to recent files (async - captures thumbnail)
       const filename = selectedFile.value?.name || translationParams.url || 'Translated PDF'
+      // Don't await - let it run in background to not block download
       saveToRecentFiles(
         taskId.value,
         filename,
@@ -558,7 +569,7 @@ const pollStatus = async () => {
         translationParams.langTo,
         !!response.data.mono_pdf_path,
         !!response.data.dual_pdf_path
-      )
+      ).catch(err => console.error('Failed to save recent file:', err))
 
       // Automatically download files
       if (monoPdfUrl.value) {
@@ -679,6 +690,18 @@ const handleOpenServiceSettings = () => {
   openAccordionItem.value = 'service'
 }
 
+// Handle going home - reset to index view if not already there
+const handleGoHome = () => {
+  // Close settings if open
+  if (showSettings.value) {
+    showSettings.value = false
+  }
+  // Only reset if not already on index to avoid unnecessary refresh
+  if (!isOnIndex.value) {
+    resetTranslation()
+  }
+}
+
 // Keyboard Shortcuts
 onKeyStroke(['n', 'N', 'r', 'R'], (e) => {
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
@@ -742,6 +765,25 @@ onKeyStroke(['l', 'L'], (e) => {
   }
 })
 
+// Download shortcuts
+onKeyStroke('1', (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    if (isTranslationComplete.value && monoPdfUrl.value) {
+      downloadMono()
+    }
+  }
+})
+
+onKeyStroke('2', (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault()
+    if (isTranslationComplete.value && dualPdfUrl.value) {
+      downloadDual()
+    }
+  }
+})
+
 // Recent Files Functions
 const loadRecentFiles = () => {
   const stored = localStorage.getItem('recentTranslations')
@@ -755,10 +797,129 @@ const loadRecentFiles = () => {
   return []
 }
 
-const saveToRecentFiles = (taskIdValue, filename, langFrom, langTo, hasMonoPdf, hasDualPdf) => {
+// Validate recent files - check if they still exist on the server
+// Files without server availability are kept but marked, so we can still show their cached preview
+const validateRecentFiles = async (files) => {
+  if (!files || files.length === 0) return []
+  
+  const validationPromises = files.map(async (file) => {
+    try {
+      await api.checkTaskExists(file.taskId)
+      return { ...file, serverAvailable: true }
+    } catch (error) {
+      // Task no longer exists on server, but we keep the cached data
+      console.log(`Recent file ${file.filename} (${file.taskId}) no longer on server`)
+      return { ...file, serverAvailable: false }
+    }
+  })
+  
+  const results = await Promise.all(validationPromises)
+  
+  // Filter out files that have no thumbnail AND no server availability (completely unusable)
+  const usableFiles = results.filter(f => f.serverAvailable || f.thumbnail)
+  
+  // Update localStorage with availability status
+  localStorage.setItem('recentTranslations', JSON.stringify(usableFiles))
+  
+  return usableFiles
+}
+
+// Constants for localStorage management
+const MAX_RECENT_FILES = 5
+const THUMBNAIL_WIDTH = 160 // px - small enough to save space
+const THUMBNAIL_QUALITY = 0.7 // JPEG quality (0-1)
+const MAX_STORAGE_SIZE = 4 * 1024 * 1024 // 4MB safety limit for localStorage
+
+// Capture PDF first page as base64 thumbnail
+const capturePdfThumbnail = async (pdfUrl) => {
+  try {
+    // Dynamically import pdfjs-dist (used by vue-pdf-embed)
+    const pdfjsLib = await import('pdfjs-dist')
+    
+    // Set worker source
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+    
+    // Fetch PDF and get first page
+    const loadingTask = pdfjsLib.getDocument(pdfUrl)
+    const pdf = await loadingTask.promise
+    const page = await pdf.getPage(1)
+    
+    // Calculate scale to fit thumbnail width
+    const viewport = page.getViewport({ scale: 1 })
+    const scale = THUMBNAIL_WIDTH / viewport.width
+    const scaledViewport = page.getViewport({ scale })
+    
+    // Create canvas and render
+    const canvas = document.createElement('canvas')
+    canvas.width = scaledViewport.width
+    canvas.height = scaledViewport.height
+    const context = canvas.getContext('2d')
+    
+    await page.render({
+      canvasContext: context,
+      viewport: scaledViewport
+    }).promise
+    
+    // Convert to compressed JPEG base64
+    const thumbnail = canvas.toDataURL('image/jpeg', THUMBNAIL_QUALITY)
+    
+    // Cleanup
+    pdf.destroy()
+    
+    return thumbnail
+  } catch (error) {
+    console.error('Failed to capture PDF thumbnail:', error)
+    return null
+  }
+}
+
+// Check localStorage usage
+const getStorageSize = () => {
+  let total = 0
+  for (const key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += localStorage[key].length * 2 // UTF-16 = 2 bytes per char
+    }
+  }
+  return total
+}
+
+// Compress stored data if exceeding limit
+const compressRecentFilesIfNeeded = (files) => {
+  let data = JSON.stringify(files)
+  
+  // If data is too large, remove thumbnails from oldest files first
+  while (data.length * 2 > MAX_STORAGE_SIZE && files.length > 0) {
+    // Find file with thumbnail and remove it (starting from oldest)
+    for (let i = files.length - 1; i >= 0; i--) {
+      if (files[i].thumbnail) {
+        console.log(`Removing thumbnail from ${files[i].filename} to save space`)
+        files[i].thumbnail = null
+        data = JSON.stringify(files)
+        break
+      }
+    }
+    // If no thumbnails left and still too big, remove oldest file
+    if (data.length * 2 > MAX_STORAGE_SIZE) {
+      files.pop()
+      data = JSON.stringify(files)
+    }
+  }
+  
+  return files
+}
+
+const saveToRecentFiles = async (taskIdValue, filename, langFrom, langTo, hasMonoPdf, hasDualPdf) => {
   const recent = loadRecentFiles()
   // Remove existing entry with same taskId if exists
   const filtered = recent.filter(f => f.taskId !== taskIdValue)
+  
+  // Capture thumbnail from the mono PDF
+  let thumbnail = null
+  if (hasMonoPdf) {
+    thumbnail = await capturePdfThumbnail(`/api/download_task/${taskIdValue}/mono`)
+  }
+  
   // Add new entry at the beginning
   filtered.unshift({
     taskId: taskIdValue,
@@ -767,12 +928,31 @@ const saveToRecentFiles = (taskIdValue, filename, langFrom, langTo, hasMonoPdf, 
     langFrom,
     langTo,
     hasMonoPdf,
-    hasDualPdf
+    hasDualPdf,
+    thumbnail, // base64 preview image
+    serverAvailable: true // Track if files are still on server
   })
-  // Keep only the last 5
-  const trimmed = filtered.slice(0, 5)
-  localStorage.setItem('recentTranslations', JSON.stringify(trimmed))
-  recentFiles.value = trimmed
+  
+  // Keep only the last MAX_RECENT_FILES
+  let trimmed = filtered.slice(0, MAX_RECENT_FILES)
+  
+  // Compress if needed to stay within storage limits
+  trimmed = compressRecentFilesIfNeeded(trimmed)
+  
+  try {
+    localStorage.setItem('recentTranslations', JSON.stringify(trimmed))
+    recentFiles.value = trimmed
+  } catch (e) {
+    console.error('Failed to save recent files to localStorage:', e)
+    // If quota exceeded, try removing thumbnails
+    trimmed.forEach(f => f.thumbnail = null)
+    try {
+      localStorage.setItem('recentTranslations', JSON.stringify(trimmed))
+      recentFiles.value = trimmed
+    } catch (e2) {
+      console.error('Still failed after removing thumbnails:', e2)
+    }
+  }
 }
 
 const clearRecentFiles = () => {
@@ -831,7 +1011,18 @@ const downloadRecentDual = async (recentTaskId) => {
 }
 
 // Load recent files on component initialization
+// First load from localStorage for immediate display
 recentFiles.value = loadRecentFiles()
+
+// Then validate asynchronously and remove missing files
+const initRecentFiles = async () => {
+  const stored = loadRecentFiles()
+  if (stored.length > 0) {
+    const validFiles = await validateRecentFiles(stored)
+    recentFiles.value = validFiles
+  }
+}
+initRecentFiles()
 </script>
 
 <template>
@@ -843,9 +1034,11 @@ recentFiles.value = loadRecentFiles()
       :show-settings="showSettings" 
       :is-wco="isWco" 
       :dev-mode="devMode"
+      :is-translating="isTranslating"
       @toggle-settings="showSettings = !showSettings" 
       @change-language="handleLanguageChange"
       @toggle-dev-mode="toggleDevMode"
+      @go-home="handleGoHome"
     />
     
     <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
@@ -1020,24 +1213,40 @@ recentFiles.value = loadRecentFiles()
             <CardContent class="space-y-6">
               <!-- Download Buttons -->
               <div class="flex flex-wrap gap-4">
-                <Button 
-                  v-if="monoPdfUrl" 
-                  variant="default" 
-                  @click="downloadMono"
-                  class="flex items-center gap-2"
-                >
-                  <Download class="h-4 w-4" />
-                  {{ t('translation.downloadMono') }}
-                </Button>
-                <Button 
-                  v-if="dualPdfUrl" 
-                  variant="outline" 
-                  @click="downloadDual"
-                  class="flex items-center gap-2"
-                >
-                  <Download class="h-4 w-4" />
-                  {{ t('translation.downloadDual') }}
-                </Button>
+                <TooltipProvider v-if="monoPdfUrl">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button 
+                        variant="default" 
+                        @click="downloadMono"
+                        class="flex items-center gap-2"
+                      >
+                        <Download class="h-4 w-4" />
+                        {{ t('translation.downloadMono') }}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{{ t('shortcuts.downloadMono') || 'Download Mono' }} (⌘/Ctrl + 1)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider v-if="dualPdfUrl">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button 
+                        variant="outline" 
+                        @click="downloadDual"
+                        class="flex items-center gap-2"
+                      >
+                        <Download class="h-4 w-4" />
+                        {{ t('translation.downloadDual') }}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{{ t('shortcuts.downloadDual') || 'Download Dual' }} (⌘/Ctrl + 2)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <!-- Fallback for old downloadUrl -->
                 <Button 
                   v-if="downloadUrl && !monoPdfUrl && !dualPdfUrl" 
@@ -1097,14 +1306,38 @@ recentFiles.value = loadRecentFiles()
                 <div 
                   v-for="file in recentFiles" 
                   :key="file.taskId" 
-                  class="recent-file-card flex flex-col items-center w-40 p-3 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  class="recent-file-card flex flex-col items-center w-40 p-3 border rounded-lg transition-colors"
+                  :class="file.serverAvailable !== false ? 'bg-muted/30 hover:bg-muted/50' : 'bg-muted/10 opacity-75'"
                 >
-                  <!-- Preview thumbnail -->
-                  <div class="recent-preview-container w-full h-28 mb-2 border rounded overflow-hidden bg-background">
+                  <!-- Preview thumbnail - use cached thumbnail or live PDF -->
+                  <div class="recent-preview-container w-full h-28 mb-2 border rounded overflow-hidden bg-background relative">
+                    <!-- Use cached thumbnail if available -->
+                    <img 
+                      v-if="file.thumbnail" 
+                      :src="file.thumbnail" 
+                      :alt="file.filename"
+                      class="w-full h-full object-cover object-top"
+                    />
+                    <!-- Fallback to live PDF if server available and no thumbnail -->
                     <VuePdfEmbed 
+                      v-else-if="file.serverAvailable !== false"
                       :source="`/api/download_task/${file.taskId}/mono`"
                       class="w-full h-full object-cover"
                     />
+                    <!-- Placeholder when no thumbnail and server unavailable -->
+                    <div 
+                      v-else 
+                      class="w-full h-full flex items-center justify-center text-muted-foreground"
+                    >
+                      <FileText class="h-8 w-8 opacity-30" />
+                    </div>
+                    <!-- Unavailable overlay badge -->
+                    <div 
+                      v-if="file.serverAvailable === false" 
+                      class="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted/80 text-muted-foreground backdrop-blur-sm"
+                    >
+                      {{ t('recentFiles.cached') }}
+                    </div>
                   </div>
                   <!-- File info -->
                   <p class="text-xs font-medium text-center truncate w-full mb-0.5" :title="file.filename">
@@ -1113,13 +1346,14 @@ recentFiles.value = loadRecentFiles()
                   <p class="text-xs text-muted-foreground mb-2">
                     {{ file.langFrom }} → {{ file.langTo }}
                   </p>
-                  <!-- Download buttons -->
+                  <!-- Download buttons - disabled when server unavailable -->
                   <div class="flex gap-1.5 w-full">
                     <Button 
                       v-if="file.hasMonoPdf" 
                       size="sm" 
                       variant="default"
                       class="flex-1 text-xs h-7 px-2"
+                      :disabled="file.serverAvailable === false"
                       @click="downloadRecentMono(file.taskId)"
                     >
                       <Download class="h-3 w-3 mr-1" />
@@ -1130,6 +1364,7 @@ recentFiles.value = loadRecentFiles()
                       size="sm" 
                       variant="outline"
                       class="flex-1 text-xs h-7 px-2"
+                      :disabled="file.serverAvailable === false"
                       @click="downloadRecentDual(file.taskId)"
                     >
                       <Download class="h-3 w-3 mr-1" />

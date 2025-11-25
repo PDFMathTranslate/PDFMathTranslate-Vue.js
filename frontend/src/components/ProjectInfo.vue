@@ -108,7 +108,7 @@ const hideShortcutsPopup = () => {
                 tabindex="0"
               ></div>
             </TooltipTrigger>
-            <TooltipContent side="top" class="max-w-xs">
+            <TooltipContent side="top" :side-offset="12" :align-offset="8" align="start" class="max-w-xs">
               <div class="space-y-1.5">
                 <p class="font-semibold">{{ statusTitle }}</p>
                 <template v-if="health && !health.error">

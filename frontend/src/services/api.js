@@ -50,5 +50,9 @@ export default {
     },
     downloadTaskDual(taskId) {
         return apiClient.get(`/download_task/${taskId}/dual`, { responseType: 'blob' });
+    },
+    // Check if a task still exists (for recent files validation)
+    checkTaskExists(taskId) {
+        return apiClient.get(`/status/${taskId}`);
     }
 };

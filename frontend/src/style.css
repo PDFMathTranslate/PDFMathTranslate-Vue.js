@@ -133,11 +133,36 @@
   }
 }
 
-/* Global transition for smoother theme switching */
-*, ::before, ::after {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 700ms;
+/* Global transition for smoother theme and accent color switching (2 seconds) */
+html,
+html *,
+html *::before,
+html *::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, outline-color !important;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  transition-duration: 800ms !important;
+}
+
+/* Exclude animations, spinners, and transforms from the slow color transition */
+.animate-spin,
+.animate-spin *,
+[class*="animate-"],
+[class*="animate-"] *,
+.transition-transform,
+.transition-opacity,
+.transition-all:not(html):not(body) {
+  transition-duration: 150ms !important;
+}
+
+/* Keep Vue transitions fast and restore transform/opacity properties */
+.fade-enter-active,
+.fade-leave-active,
+.rotate-fade-enter-active,
+.rotate-fade-leave-active,
+[class*="-enter-active"],
+[class*="-leave-active"] {
+  transition-property: all !important;
+  transition-duration: 200ms !important;
 }
 
 /* Ensure dropdown portals remain interactive in WCO titlebar */

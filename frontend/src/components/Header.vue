@@ -29,6 +29,10 @@ const props = defineProps({
   devMode: {
     type: Boolean,
     default: false
+  },
+  isTranslating: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -36,13 +40,13 @@ const { locale, t } = useI18n()
 const colorMode = useColorMode({
   disableTransition: false
 })
-const emit = defineEmits(['toggle-settings', 'change-language', 'toggle-dev-mode'])
+const emit = defineEmits(['toggle-settings', 'change-language', 'toggle-dev-mode', 'go-home'])
 
 // Dev mode activation via 4 rapid clicks
 const clickCount = ref(0)
 const clickTimeout = ref(null)
 const DEV_MODE_CLICKS = 4
-const CLICK_TIMEOUT_MS = 1500
+const CLICK_TIMEOUT_MS = 3000
 
 const handleSettingsClick = () => {
   clickCount.value++
@@ -97,14 +101,20 @@ const toggleTheme = () => {
     :class="{ 'wco-header': isWco }"
   >
     <div class="flex items-center gap-2">
-      <h1 v-if="!isWco" class="text-xl font-bold tracking-tight text-primary">{{ t('app.title') }}</h1>
+      <h1 
+        v-if="!isWco" 
+        class="text-xl font-bold tracking-tight text-primary cursor-pointer hover:opacity-80 transition-opacity select-none"
+        @click="emit('go-home')"
+      >
+        {{ t('app.title') }}
+      </h1>
     </div>
     <div class="flex items-center gap-2" :class="{ 'app-no-drag': isWco }">
       <PWAInstallButton />
       
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="ghost" size="icon" id="language-menu-trigger">
+          <Button variant="ghost" size="icon" id="language-menu-trigger" :disabled="isTranslating">
             <div class="relative w-5 h-5 flex items-center justify-center">
               <Transition name="rotate-fade" mode="out-in">
                 <Languages :key="locale" class="absolute h-5 w-5" />
@@ -149,6 +159,7 @@ const toggleTheme = () => {
               size="icon" 
               @click="handleSettingsClick"
               :class="{ 'text-amber-500': devMode }"
+              :disabled="isTranslating"
             >
               <div class="relative w-5 h-5 flex items-center justify-center">
                 <Transition name="rotate-fade">

@@ -77,7 +77,7 @@ const handleFileSelect = (e) => {
   <div class="w-full mt-2">
     <div v-if="source === 'File'">
       <div
-        class="relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300"
+        class="file-dropbox relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300"
         :class="[
           isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
           file ? 'border-primary bg-primary/5' : ''
@@ -145,5 +145,38 @@ const handleFileSelect = (e) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Elegant floating animation for file dropbox on hover */
+.file-dropbox {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.3s ease,
+              border-color 0.3s ease,
+              background-color 0.3s ease;
+}
+
+.file-dropbox:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 
+              0 4px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+:global(.dark) .file-dropbox:hover {
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.4), 
+              0 4px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Subtle bounce effect for the icon on hover */
+.file-dropbox:hover :deep(.p-3) {
+  animation: gentle-bounce 0.6s ease-in-out;
+}
+
+@keyframes gentle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 </style>

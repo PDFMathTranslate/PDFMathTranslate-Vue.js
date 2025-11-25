@@ -99,12 +99,24 @@
   "header": {
     "howDoesItWork": "Wie funktioniert es?"
   },
+  "shortcuts": {
+    "title": "Tastenkürzel",
+    "language": "Sprache wechseln",
+    "theme": "Dunkelmodus umschalten",
+    "settings": "Einstellungen öffnen",
+    "closeSettings": "Einstellungen schließen",
+    "stop": "Übersetzung stoppen",
+    "new": "Neue Übersetzung",
+    "downloadMono": "Übersetzung herunterladen",
+    "downloadDual": "Vergleich herunterladen"
+  },
   "recentFiles": {
     "title": "Letzte Übersetzungen",
     "description": "Ihre kürzlich übersetzten Dateien",
     "clear": "Löschen",
     "mono": "Mono",
-    "dual": "Dual"
+    "dual": "Dual",
+    "cached": "Zwischengespeichert"
   },
   "devMode": {
     "enabled": "Entwicklermodus aktiv",
