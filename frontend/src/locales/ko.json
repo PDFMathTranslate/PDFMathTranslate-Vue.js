@@ -105,5 +105,13 @@
     "clear": "지우기",
     "mono": "번역",
     "dual": "비교"
+  },
+  "devMode": {
+    "enabled": "개발 모드 활성화",
+    "badge": "DEV",
+    "statsTitle": "시스템 통계",
+    "statsDescription": "실시간 성능 및 시스템 메트릭",
+    "advancedSettingsTitle": "고급 매개변수",
+    "advancedSettingsDescription": "백엔드 구성에서 자동 생성된 설정"
   }
 }

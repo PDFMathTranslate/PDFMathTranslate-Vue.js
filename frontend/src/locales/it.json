@@ -105,5 +105,13 @@
     "clear": "Cancella",
     "mono": "Mono",
     "dual": "Dual"
+  },
+  "devMode": {
+    "enabled": "Modalità sviluppatore attiva",
+    "badge": "DEV",
+    "statsTitle": "Statistiche sistema",
+    "statsDescription": "Metriche di prestazioni e sistema in tempo reale",
+    "advancedSettingsTitle": "Parametri avanzati",
+    "advancedSettingsDescription": "Impostazioni auto-generate dalla configurazione backend"
   }
 }

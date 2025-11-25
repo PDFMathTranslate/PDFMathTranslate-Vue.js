@@ -92,7 +92,8 @@ async def main() -> int:
         from pdf2zh_next.server import run_server
 
         port = settings.gui_settings.server_port if settings.gui_settings.server_port else 7860
-        await run_server(port=port)
+        gui_dev = settings.gui_settings.gui_dev if hasattr(settings.gui_settings, 'gui_dev') else False
+        await run_server(port=port, gui_dev=gui_dev)
         return 0
 
     assert len(settings.basic.input_files) >= 1, "At least one input file is required"

@@ -2,7 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
-import { Moon, Sun, Languages, Settings, X } from 'lucide-vue-next'
+import { Moon, Sun, Languages, Settings, X, Zap } from 'lucide-vue-next'
 import { useColorMode } from '@vueuse/core'
 import PWAInstallButton from '@/components/PWAInstallButton.vue'
 import {
@@ -25,6 +25,10 @@ const props = defineProps({
   isWco: {
     type: Boolean,
     default: false
+  },
+  devMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -32,7 +36,37 @@ const { locale, t } = useI18n()
 const colorMode = useColorMode({
   disableTransition: false
 })
-const emit = defineEmits(['toggle-settings', 'change-language'])
+const emit = defineEmits(['toggle-settings', 'change-language', 'toggle-dev-mode'])
+
+// Dev mode activation via 4 rapid clicks
+const clickCount = ref(0)
+const clickTimeout = ref(null)
+const DEV_MODE_CLICKS = 4
+const CLICK_TIMEOUT_MS = 1500
+
+const handleSettingsClick = () => {
+  clickCount.value++
+  
+  // Clear existing timeout
+  if (clickTimeout.value) {
+    clearTimeout(clickTimeout.value)
+  }
+  
+  // Check if we've reached the required clicks
+  if (clickCount.value >= DEV_MODE_CLICKS) {
+    emit('toggle-dev-mode')
+    clickCount.value = 0
+    return
+  }
+  
+  // Reset click count after timeout
+  clickTimeout.value = setTimeout(() => {
+    clickCount.value = 0
+  }, CLICK_TIMEOUT_MS)
+  
+  // Toggle settings on single click
+  emit('toggle-settings')
+}
 
 const supportedLocales = [
   { code: 'en', label: 'English', native: 'English' },
@@ -110,10 +144,16 @@ const toggleTheme = () => {
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button variant="ghost" size="icon" @click="emit('toggle-settings')">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              @click="handleSettingsClick"
+              :class="{ 'text-amber-500': devMode }"
+            >
               <div class="relative w-5 h-5 flex items-center justify-center">
                 <Transition name="rotate-fade">
-                  <Settings v-if="!showSettings" class="absolute h-5 w-5 settings-icon" />
+                  <Zap v-if="devMode && !showSettings" class="absolute h-5 w-5 settings-icon text-amber-500" />
+                  <Settings v-else-if="!showSettings" class="absolute h-5 w-5 settings-icon" />
                   <X v-else class="absolute h-5 w-5 close-icon" />
                 </Transition>
               </div>
@@ -122,6 +162,7 @@ const toggleTheme = () => {
           </TooltipTrigger>
           <TooltipContent>
             <p>{{ showSettings ? t('shortcuts.closeSettings') + ' (Esc)' : t('shortcuts.settings') + ' (⌘/Ctrl + ,)' }}</p>
+            <p v-if="devMode" class="text-amber-500 text-xs mt-1">{{ t('devMode.enabled') }}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

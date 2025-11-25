@@ -77,6 +77,7 @@ class GUISettings(BaseModel):
     )
     server_port: int = Field(default=7860, description="WebUI port")
     ui_lang: str | None = Field(default="en", description="UI language")
+    gui_dev: bool = Field(default=False, description="Enable GUI development mode with advanced debugging features")
 
 
 class TranslationSettings(BaseModel):

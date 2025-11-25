@@ -5,12 +5,14 @@ import Header from '@/components/Header.vue'
 import TranslationOptions from '@/components/TranslationOptions.vue'
 import ApplicationSettings from '@/components/ApplicationSettings.vue'
 import ProjectInfo from '@/components/ProjectInfo.vue'
+import DevStatsCard from '@/components/DevStatsCard.vue'
+import DevSettings from '@/components/DevSettings.vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
-import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2 } from 'lucide-vue-next'
+import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2, Zap } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 import {
   Tooltip,
@@ -63,6 +65,34 @@ const openAccordionItem = ref('')
 
 // Recent translated files
 const recentFiles = ref([])
+
+// Development mode
+const devMode = ref(false)
+const devModeFromServer = ref(false)
+const escPressCount = ref(0)
+const escPressTimeout = ref(null)
+const DEV_MODE_ESC_PRESSES = 4
+const ESC_PRESS_TIMEOUT_MS = 1500
+
+// Load dev mode preference from localStorage
+const loadDevModePreference = () => {
+  const stored = localStorage.getItem('devMode')
+  if (stored) {
+    return stored === 'true'
+  }
+  return false
+}
+
+// Save dev mode preference
+const saveDevModePreference = (enabled) => {
+  localStorage.setItem('devMode', enabled ? 'true' : 'false')
+}
+
+// Toggle dev mode
+const toggleDevMode = () => {
+  devMode.value = !devMode.value
+  saveDevModePreference(devMode.value)
+}
 
 // Preview URL for selected file
 const selectedFilePreviewUrl = ref(null)
@@ -151,7 +181,15 @@ onMounted(async () => {
     const response = await api.getConfig()
     config.value = response.data
     serviceStatus.value = 'ready'
-    // Initialize defaults if needed
+    
+    // Check if dev mode was enabled via CLI (--gui-dev)
+    if (response.data.dev_mode) {
+      devModeFromServer.value = true
+      devMode.value = true
+    } else {
+      // Load from localStorage if not from server
+      devMode.value = loadDevModePreference()
+    }
   } catch (error) {
     console.error('Failed to load config:', error)
     serviceStatus.value = 'error'
@@ -676,6 +714,24 @@ onKeyStroke('Escape', (e) => {
   if (document.querySelector('[role="menu"]')) return
 
   e.preventDefault()
+  
+  // Track ESC presses for dev mode activation
+  escPressCount.value++
+  
+  if (escPressTimeout.value) {
+    clearTimeout(escPressTimeout.value)
+  }
+  
+  if (escPressCount.value >= DEV_MODE_ESC_PRESSES) {
+    toggleDevMode()
+    escPressCount.value = 0
+    return
+  }
+  
+  escPressTimeout.value = setTimeout(() => {
+    escPressCount.value = 0
+  }, ESC_PRESS_TIMEOUT_MS)
+  
   showSettings.value = !showSettings.value
 })
 
@@ -783,7 +839,14 @@ recentFiles.value = loadRecentFiles()
     class="min-h-screen bg-background font-sans antialiased overflow-x-hidden transition-opacity duration-200 flex flex-col"
     :class="{ 'opacity-0': isLanguageSwitching, 'opacity-100': !isLanguageSwitching }"
   >
-    <Header :show-settings="showSettings" :is-wco="isWco" @toggle-settings="showSettings = !showSettings" @change-language="handleLanguageChange" />
+    <Header 
+      :show-settings="showSettings" 
+      :is-wco="isWco" 
+      :dev-mode="devMode"
+      @toggle-settings="showSettings = !showSettings" 
+      @change-language="handleLanguageChange"
+      @toggle-dev-mode="toggleDevMode"
+    />
     
     <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
@@ -1018,7 +1081,7 @@ recentFiles.value = loadRecentFiles()
           </Card>
 
           <!-- Recent Files Section -->
-          <Card v-if="recentFiles.length > 0" class="mt-8">
+          <Card v-if="recentFiles.length > 0">
             <CardHeader class="flex flex-row items-center justify-between pb-4 space-y-0">
               <div class="space-y-1.5">
                 <CardTitle>{{ t('recentFiles.title') }}</CardTitle>
@@ -1077,9 +1140,17 @@ recentFiles.value = loadRecentFiles()
               </div>
             </CardContent>
           </Card>
+
+          <!-- Dev Mode Stats Card -->
+          <DevStatsCard 
+            v-if="devMode" 
+            :health="healthInfo" 
+            :config="config"
+            class="mt-8"
+          />
         </div>
 
-        <div v-else key="settings" class="max-w-3xl mx-auto">
+        <div v-else key="settings" class="max-w-3xl mx-auto space-y-6">
           <Card class="h-full">
             <CardHeader>
               <CardTitle class="flex items-center gap-2">
@@ -1087,12 +1158,23 @@ recentFiles.value = loadRecentFiles()
                 <Transition name="fade">
                   <Check v-if="isSaved" class="h-4 w-4 text-green-500" />
                 </Transition>
+                <span v-if="devMode" class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <Zap class="h-3 w-3" />
+                  {{ t('devMode.badge') }}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ApplicationSettings v-model="translationParams" :config="config" :open-accordion="openAccordionItem" />
             </CardContent>
           </Card>
+
+          <!-- Dev Mode Advanced Settings -->
+          <DevSettings 
+            v-if="devMode && config?.all_params" 
+            v-model="translationParams" 
+            :config="config"
+          />
         </div>
       </Transition>
     </main>

@@ -141,5 +141,13 @@
     "clear": "Clear",
     "mono": "Mono",
     "dual": "Dual"
+  },
+  "devMode": {
+    "enabled": "Dev Mode Active",
+    "badge": "DEV",
+    "statsTitle": "System Stats",
+    "statsDescription": "Real-time performance and system metrics",
+    "advancedSettingsTitle": "Advanced Parameters",
+    "advancedSettingsDescription": "Auto-generated settings from backend configuration"
   }
 }

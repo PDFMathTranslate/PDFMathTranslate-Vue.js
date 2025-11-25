@@ -938,14 +938,73 @@ async def download_task_dual(task_id: str):
         
     return FileResponse(file_path, filename=file_path.name)
 
+# Store dev mode flag (set when server starts with --gui-dev)
+_gui_dev_mode = False
+
+def set_gui_dev_mode(enabled: bool):
+    global _gui_dev_mode
+    _gui_dev_mode = enabled
+
+def get_gui_dev_mode() -> bool:
+    return _gui_dev_mode
+
+# Get all available translation parameters for dev mode
+def _get_all_translation_params():
+    """Get all available translation parameters with their types and descriptions"""
+    from pdf2zh_next.config.model import PDFSettings, TranslationSettings, GUISettings
+    
+    params = {}
+    
+    # Get fields from TranslationSettings
+    for name, field in TranslationSettings.model_fields.items():
+        params[f"translation.{name}"] = {
+            "name": name,
+            "category": "translation",
+            "type": str(field.annotation),
+            "description": field.description,
+            "default": field.default
+        }
+    
+    # Get fields from PDFSettings
+    for name, field in PDFSettings.model_fields.items():
+        params[f"pdf.{name}"] = {
+            "name": name,
+            "category": "pdf",
+            "type": str(field.annotation),
+            "description": field.description,
+            "default": field.default
+        }
+    
+    # Get fields from each translation engine
+    for metadata in TRANSLATION_ENGINE_METADATA:
+        if metadata.setting_model_type:
+            engine_name = metadata.translate_engine_type
+            for name, field in metadata.setting_model_type.model_fields.items():
+                if name not in ("translate_engine_type", "support_llm"):
+                    params[f"engine.{engine_name}.{name}"] = {
+                        "name": name,
+                        "category": f"engine_{engine_name}",
+                        "type": str(field.annotation),
+                        "description": field.description if hasattr(field, 'description') else None,
+                        "default": field.default if hasattr(field, 'default') else None
+                    }
+    
+    return params
+
 @app.get("/api/config")
 async def get_config():
     try:
-        return {
+        config_data = {
             "languages": lang_map,
             "services": [x.translate_engine_type for x in TRANSLATION_ENGINE_METADATA],
-            # Add other config data
+            "dev_mode": _gui_dev_mode,
         }
+        
+        # Add detailed params info in dev mode
+        if _gui_dev_mode:
+            config_data["all_params"] = _get_all_translation_params()
+        
+        return config_data
     except Exception as e:
         logger.error(f"Error getting config: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -995,10 +1054,15 @@ async def get_health():
             "timestamp": time.time()
         }
 
-async def run_server(host="0.0.0.0", port=8000):
+async def run_server(host="0.0.0.0", port=8000, gui_dev: bool = False):
     import uvicorn
     import webbrowser
     import threading
+    
+    # Set dev mode flag
+    set_gui_dev_mode(gui_dev)
+    if gui_dev:
+        logger.info("GUI Development Mode enabled")
     
     # Determine frontend path
     # Assuming structure:

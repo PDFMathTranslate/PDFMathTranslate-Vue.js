@@ -107,5 +107,13 @@
     "clear": "クリア",
     "mono": "翻訳",
     "dual": "対照"
+  },
+  "devMode": {
+    "enabled": "開発モード有効",
+    "badge": "DEV",
+    "statsTitle": "システム統計",
+    "statsDescription": "リアルタイムパフォーマンスとシステムメトリクス",
+    "advancedSettingsTitle": "詳細パラメータ",
+    "advancedSettingsDescription": "バックエンド設定から自動生成"
   }
 }

@@ -141,5 +141,13 @@
     "clear": "清除",
     "mono": "译文",
     "dual": "对照"
+  },
+  "devMode": {
+    "enabled": "开发模式已激活",
+    "badge": "开发",
+    "statsTitle": "系统状态",
+    "statsDescription": "实时性能和系统指标",
+    "advancedSettingsTitle": "高级参数",
+    "advancedSettingsDescription": "从后端配置自动生成的设置"
   }
 }

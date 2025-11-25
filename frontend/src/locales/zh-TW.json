@@ -108,5 +108,13 @@
     "clear": "清除",
     "mono": "譯文",
     "dual": "對照"
+  },
+  "devMode": {
+    "enabled": "開發模式已啟用",
+    "badge": "DEV",
+    "statsTitle": "系統狀態",
+    "statsDescription": "即時效能與系統指標",
+    "advancedSettingsTitle": "進階參數",
+    "advancedSettingsDescription": "從後端設定自動產生的設定"
   }
 }
