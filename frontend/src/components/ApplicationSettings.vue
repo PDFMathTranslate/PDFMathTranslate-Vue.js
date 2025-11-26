@@ -328,31 +328,6 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       </div>
     </div>
 
-          <div class="space-y-2">
-            <Label>{{ t('settings.accentColor') }}</Label>
-            <div class="grid grid-cols-5 gap-3">
-              <div 
-                v-for="color in ['black', 'sky', 'lime', 'orange', 'pink']" 
-                :key="color"
-                class="border-2 rounded-lg p-3 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-all"
-                :class="{ 'border-primary ring-2 ring-primary/20': accentColor === color, 'border-border': accentColor !== color }"
-                @click="accentColor = color"
-              >
-                <div 
-                  class="w-8 h-8 rounded-full"
-                  :class="{
-                    'bg-black dark:bg-white': color === 'black',
-                    'bg-sky-800': color === 'sky',
-                    'bg-lime-800': color === 'lime',
-                    'bg-orange-800': color === 'orange',
-                    'bg-pink-800': color === 'pink'
-                  }"
-                />
-                <span class="text-xs font-medium">{{ t(`settings.accentColors.${color}`) }}</span>
-              </div>
-            </div>
-          </div>
-          
     <Accordion type="single" collapsible class="w-full" v-model="accordionValue">
       
       <AccordionItem value="output-preference">
@@ -628,6 +603,31 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       </AccordionItem>
     </Accordion>
 
+    <div class="space-y-2">
+            <Label>{{ t('settings.accentColor') }}</Label>
+            <div class="grid grid-cols-5 gap-3">
+              <div 
+                v-for="color in ['black', 'sky', 'lime', 'orange', 'pink']" 
+                :key="color"
+                class="border-2 rounded-lg p-3 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-all"
+                :class="{ 'border-primary ring-2 ring-primary/20': accentColor === color, 'border-border': accentColor !== color }"
+                @click="accentColor = color"
+              >
+                <div 
+                  class="w-8 h-8 rounded-full"
+                  :class="{
+                    'bg-black dark:bg-white': color === 'black',
+                    'bg-sky-800': color === 'sky',
+                    'bg-lime-800': color === 'lime',
+                    'bg-orange-800': color === 'orange',
+                    'bg-pink-800': color === 'pink'
+                  }"
+                />
+                <span class="text-xs font-medium">{{ t(`settings.accentColors.${color}`) }}</span>
+              </div>
+            </div>
+          </div>
+          
   </div>
 </template>
 
