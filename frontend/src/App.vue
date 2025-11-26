@@ -27,7 +27,7 @@ import { useColorMode, onKeyStroke } from '@vueuse/core'
 const { t, locale } = useI18n()
 
 const colorMode = useColorMode({
-  disableTransition: false  // Enable smooth 2s color transitions
+  disableTransition: false  // Enable smooth 300ms color transitions
 })
 
 // Sync meta theme-color with color mode
