@@ -171,7 +171,14 @@
     "activeTasks": "活动任务",
     "pendingTasks": "待处理任务",
     "currentTasks": "当前任务",
-    "errorFetchingHealth": "获取健康信息失败"
+    "errorFetchingHealth": "获取健康信息失败",
+    "errorTooltip": {
+      "title": "后端连接错误",
+      "startBackend": "您是否已通过以下命令启动后端",
+      "exception": "异常信息",
+      "attempts": "连接尝试次数",
+      "githubLink": "在 GitHub 上查看文档"
+    }
   },
   "recentFiles": {
     "title": "最近翻译",

@@ -85,6 +85,7 @@ watchEffect(() => {
 })
 const serviceStatus = ref('ready') // ready, busy, error
 const healthInfo = ref(null) // Store health information including CPU load
+const connectionAttempts = ref(0) // Track connection attempts for error reporting
 const showSettings = ref(false)
 const isSaved = ref(false)
 const isLanguageSwitching = ref(false)
@@ -176,10 +177,14 @@ const fetchHealthInfo = async () => {
     if (response.data.status) {
       serviceStatus.value = response.data.status
     }
+    // Reset connection attempts on successful connection
+    connectionAttempts.value = 0
   } catch (error) {
     console.error('Failed to fetch health info:', error)
     serviceStatus.value = 'error'
     healthInfo.value = { status: 'error', error: error.message }
+    // Increment connection attempts on error
+    connectionAttempts.value++
   }
 }
 
@@ -1651,7 +1656,7 @@ initRecentFiles()
       </Transition>
     </main>
 
-    <ProjectInfo :status="serviceStatus" :health="healthInfo" />
+    <ProjectInfo :status="serviceStatus" :health="healthInfo" :connection-attempts="connectionAttempts" />
   </div>
 </template>
 

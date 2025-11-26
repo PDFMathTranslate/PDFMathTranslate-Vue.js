@@ -1,7 +1,7 @@
 <script setup>
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Github, Keyboard, Quote, Copy, Check } from 'lucide-vue-next'
+import { Github, Keyboard, Quote, Copy, Check, AlertCircle, ExternalLink } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -19,6 +19,10 @@ const props = defineProps({
   health: {
     type: Object,
     default: null
+  },
+  connectionAttempts: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -262,6 +266,43 @@ const copyCitation = async () => {
     console.error('Failed to copy citation:', err)
   }
 }
+
+// Error tooltip logic
+const showErrorTooltip = computed(() => props.status === 'error')
+
+// Reactive style object for error popup positioning
+const errorPopupStyle = reactive({
+  position: 'fixed',
+  top: 'auto',
+  left: 'auto',
+  transform: 'translateY(-100%)',
+  maxWidth: '24rem'
+})
+
+// Position the error tooltip to match the normal tooltip
+const updateErrorPosition = () => {
+  if (typeof window === 'undefined') return
+  
+  // Find the status dot element
+  const statusDot = document.querySelector('.w-3.h-3.rounded-full')
+  if (!statusDot) return
+  
+  const rect = statusDot.getBoundingClientRect()
+  
+  // Match TooltipContent positioning: side="top", align="start", sideOffset=12, alignOffset=8
+  const top = rect.top -24 // sideOffset
+  const left = rect.left + 2 // alignOffset for align="start"
+  
+  errorPopupStyle.top = `${top}px`
+  errorPopupStyle.left = `${left}px`
+}
+
+// Watch for error state changes and update position
+watch(showErrorTooltip, (newVal) => {
+  if (newVal) {
+    setTimeout(updateErrorPosition, 10)
+  }
+})
 </script>
 
 <template>
@@ -321,6 +362,54 @@ const copyCitation = async () => {
           </Tooltip>
         </TooltipProvider>
         <p class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</p>
+        
+        <!-- Persistent Error Tooltip -->
+        <Teleport to="body">
+          <Transition name="error-fade">
+            <div
+              v-if="showErrorTooltip"
+              class="fixed bg-popover border rounded-md shadow-md p-4 z-[2147483647] max-w-md text-popover-foreground"
+              :style="errorPopupStyle"
+            >
+              <div class="space-y-3">
+                <!-- Title -->
+                <div class="flex items-center gap-2">
+                  <AlertCircle class="w-4 h-4 text-red-500" />
+                  <h3 class="font-semibold text-sm">{{ t('service.errorTooltip.title') }}</h3>
+                </div>
+                
+                <!-- Backend Start Command -->
+                <div class="space-y-1.5">
+                  <p class="text-xs text-muted-foreground">{{ t('service.errorTooltip.startBackend') }}</p>
+                  <code class="block bg-muted px-3 py-2 rounded-md text-xs font-mono">pdf2zh_gui</code>
+                </div>
+                
+                <!-- Exception -->
+                <div v-if="health && health.error" class="space-y-1.5">
+                  <p class="text-xs font-medium">{{ t('service.errorTooltip.exception') }}:</p>
+                  <p class="text-xs text-muted-foreground bg-muted px-3 py-2 rounded-md font-mono break-words">{{ health.error }}</p>
+                </div>
+                
+                <!-- Connection Attempts -->
+                <div class="flex items-center justify-between text-xs border-t pt-2">
+                  <span class="text-muted-foreground">{{ t('service.errorTooltip.attempts') }}:</span>
+                  <span class="font-mono font-semibold">{{ connectionAttempts }}</span>
+                </div>
+                
+                <!-- GitHub Link -->
+                <a 
+                  href="https://github.com/PDFMathTranslate/PDFMathTranslate" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  class="flex items-center gap-2 text-xs text-primary hover:underline transition-colors"
+                >
+                  <ExternalLink class="w-3.5 h-3.5" />
+                  {{ t('service.errorTooltip.githubLink') }}
+                </a>
+              </div>
+            </div>
+          </Transition>
+        </Teleport>
       </div>
       
       <div
@@ -569,5 +658,16 @@ const copyCitation = async () => {
 .citation-content-enter-to,
 .citation-content-leave-from {
   max-height: 300px;
+}
+
+.error-fade-enter-active,
+.error-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.error-fade-enter-from,
+.error-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
 }
 </style>

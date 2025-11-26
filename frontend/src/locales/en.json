@@ -171,7 +171,14 @@
     "activeTasks": "Active Tasks",
     "pendingTasks": "Pending Tasks",
     "currentTasks": "Current Tasks",
-    "errorFetchingHealth": "Error fetching health info"
+    "errorFetchingHealth": "Error fetching health info",
+    "errorTooltip": {
+      "title": "Backend Connection Error",
+      "startBackend": "Have you started the backend by",
+      "exception": "Exception",
+      "attempts": "Connection attempts",
+      "githubLink": "View documentation on GitHub"
+    }
   },
   "recentFiles": {
     "title": "Recent Translations",
