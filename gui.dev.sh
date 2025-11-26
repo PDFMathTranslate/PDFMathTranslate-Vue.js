@@ -1,0 +1,1 @@
+cd ./frontend && bun run build && uv tool install -e ../ --with pdf2zh && cd ../ && pdf2zh_gui
