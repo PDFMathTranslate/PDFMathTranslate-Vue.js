@@ -147,36 +147,107 @@ const handleFileSelect = (e) => {
   opacity: 0;
 }
 
-/* Elegant floating animation for file dropbox on hover */
+/* Elegant floating animation for file dropbox */
 .file-dropbox {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              box-shadow 0.3s ease,
+  animation: subtle-breathe 4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.3s ease,
               background-color 0.3s ease;
 }
 
 .file-dropbox:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 
-              0 4px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: levitate 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 
+              0 8px 16px -8px rgba(0, 0, 0, 0.08),
+              0 0 0 1px rgba(0, 0, 0, 0.02);
 }
 
 :global(.dark) .file-dropbox:hover {
-  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.4), 
-              0 4px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 
+              0 8px 16px -8px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
-/* Subtle bounce effect for the icon on hover */
-.file-dropbox:hover :deep(.p-3) {
-  animation: gentle-bounce 0.6s ease-in-out;
-}
-
-@keyframes gentle-bounce {
+/* Subtle resting animation - gentle breathing effect */
+@keyframes subtle-breathe {
   0%, 100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-2px) scale(1.002);
+  }
+}
+
+/* Hover state - more pronounced organic floating */
+@keyframes levitate {
+  0% {
+    transform: translateY(-6px) scale(1.01) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-9px) scale(1.012) rotate(0.2deg);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.01) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-9px) scale(1.012) rotate(-0.2deg);
+  }
+  100% {
+    transform: translateY(-6px) scale(1.01) rotate(0deg);
+  }
+}
+
+/* Elegant icon animation on hover */
+.file-dropbox:hover :deep(.p-3) {
+  animation: icon-float 2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+@keyframes icon-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+}
+
+/* Smooth border glow on hover */
+.file-dropbox::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 0%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.file-dropbox:hover::before {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.3) 0%, hsl(var(--primary) / 0.1) 100%);
+  opacity: 1;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .file-dropbox {
+    animation: none;
+  }
+  .file-dropbox:hover {
+    animation: none;
+    transform: translateY(-2px);
+  }
+  .file-dropbox:hover :deep(.p-3) {
+    animation: none;
   }
 }
 </style>

@@ -9,7 +9,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'vite.svg'],
+      includeAssets: ['pwa-64x64.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'PDFMathTranslate',
         short_name: 'PDFMath',

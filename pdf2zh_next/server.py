@@ -799,6 +799,18 @@ async def run_translation(task_id, file_path, ui_inputs):
 
 async def run_experimental_translation(task_id, file_path, ui_inputs):
     """Run translation using experimental pdf2zh_next backend"""
+    service = ui_inputs.get("service")
+    
+    # Check for deprecated services
+    deprecated_services = {"Google", "Bing"}
+    if service in deprecated_services:
+        raise ValueError(
+            f"'{service}' translation service is deprecated and no longer supported. "
+            f"Please select a different service such as 'SiliconFlowFree' (free, no API key required), "
+            f"'OpenAI', 'DeepSeek', or other supported services. "
+            f"Go to Settings > Service to change your translation service."
+        )
+    
     # Load base settings
     config_manager = ConfigManager()
     base_settings = config_manager.initialize_cli_config()
@@ -871,6 +883,17 @@ async def run_stable_translation(task_id, file_path, ui_inputs):
     from concurrent.futures import ThreadPoolExecutor
     
     service = ui_inputs.get("service")
+    
+    # Check for deprecated services
+    deprecated_services = {"Google", "Bing"}
+    if service in deprecated_services:
+        raise ValueError(
+            f"'{service}' translation service is deprecated and no longer supported. "
+            f"Please select a different service such as 'SiliconFlowFree' (free, no API key required), "
+            f"'OpenAI', 'DeepSeek', or other supported services. "
+            f"Go to Settings > Service to change your translation service."
+        )
+    
     lang_from = ui_inputs.get("lang_from")
     lang_to = ui_inputs.get("lang_to")
     page_range = ui_inputs.get("page_range", "All")
@@ -914,9 +937,8 @@ async def run_stable_translation(task_id, file_path, ui_inputs):
     }
     
     # Stable mode service map
+    # NOTE: Google and Bing are deprecated and removed
     stable_service_map = {
-        "Google": "Google",
-        "Bing": "Bing",
         "DeepL": "DeepL",
         "DeepLX": "DeepLX",
         "Ollama": "Ollama",
@@ -970,7 +992,8 @@ async def run_stable_translation(task_id, file_path, ui_inputs):
         selected_pages = stable_page_map.get(page_range)
     
     # Get translated service name
-    translated_service = stable_service_map.get(service, "Google")
+    # Fall back to SiliconFlow since Google is deprecated
+    translated_service = stable_service_map.get(service, "Silicon")
     
     # Prepare output paths
     filename = file_path.stem

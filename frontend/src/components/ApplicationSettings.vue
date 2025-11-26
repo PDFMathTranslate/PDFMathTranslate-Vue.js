@@ -337,8 +337,7 @@ const serviceFields = {
     { name: 'claude_code_model', label: 'Model', type: 'text', placeholder: 'sonnet' },
   ],
   SiliconFlowFree: [],
-  Google: [],
-  Bing: []
+  // NOTE: Google and Bing are deprecated and removed from supported services
 }
 
 const currentServiceFields = computed(() => {

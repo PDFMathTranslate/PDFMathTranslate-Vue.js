@@ -138,8 +138,13 @@ GUI_PASSWORD_FIELDS.append("openai_api_key")
 GUI_SENSITIVE_FIELDS.append("openai_base_url")
 
 
+# NOTE: Bing and Google translators are deprecated and no longer supported.
+# They have been removed from TRANSLATION_ENGINE_SETTING_TYPE.
+# If you need free translation, please use SiliconFlowFree instead.
+# See: https://pdf2zh-next.com/advanced/Documentation-of-Translation-Services.html
+
 class BingSettings(BaseModel):
-    """Bing Translation settings"""
+    """Bing Translation settings (DEPRECATED - not supported)"""
 
     translate_engine_type: Literal["Bing"] = Field(default="Bing")
 
@@ -148,7 +153,7 @@ class BingSettings(BaseModel):
 
 
 class GoogleSettings(BaseModel):
-    """Google Translation settings"""
+    """Google Translation settings (DEPRECATED - not supported)"""
 
     translate_engine_type: Literal["Google"] = Field(default="Google")
 
@@ -831,12 +836,12 @@ class ClaudeCodeSettings(BaseModel):
 ## Please add the translator configuration class above this location.
 
 # 所有翻译引擎
+# NOTE: GoogleSettings and BingSettings are deprecated and removed from this list.
+# See: https://pdf2zh-next.com/advanced/Documentation-of-Translation-Services.html
 TRANSLATION_ENGINE_SETTING_TYPE: TypeAlias = (
     SiliconFlowFreeSettings
     | OpenAISettings
     | AliyunDashScopeSettings
-    | GoogleSettings
-    | BingSettings
     | DeepLSettings
     | DeepSeekSettings
     | OllamaSettings
