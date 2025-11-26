@@ -388,6 +388,12 @@ const copyCitation = async () => {
                 <span class="text-muted-foreground">{{ t('shortcuts.theme') }}</span> 
                 <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + D</span>
                 
+                <span class="text-muted-foreground">{{ t('shortcuts.downloadMono') || 'Download Mono' }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + 1</span>
+                
+                <span class="text-muted-foreground">{{ t('shortcuts.downloadDual') || 'Download Dual' }}</span> 
+                <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + 2</span>
+                
                 <span class="text-muted-foreground">{{ t('shortcuts.language') }}</span> 
                 <span class="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">⌘/Ctrl + L</span>
 
