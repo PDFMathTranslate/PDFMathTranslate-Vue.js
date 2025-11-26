@@ -1739,7 +1739,7 @@ initRecentFiles()
 
 .recent-file-card:hover {
   animation: card-hover 2.5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-2px);
   box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12), 
               0 6px 12px -4px rgba(0, 0, 0, 0.06),
               0 0 0 1px rgba(0, 0, 0, 0.02);
@@ -1767,22 +1767,22 @@ initRecentFiles()
   }
 }
 
-/* Hover state - elegant floating with slight rotation */
+/* Hover state - subtle floating */
 @keyframes card-hover {
   0% {
-    transform: translateY(-8px) scale(1.02) rotate(0deg);
+    transform: translateY(-2px);
   }
   25% {
-    transform: translateY(-10px) scale(1.022) rotate(0.4deg);
+    transform: translateY(-3px);
   }
   50% {
-    transform: translateY(-12px) scale(1.025) rotate(0deg);
+    transform: translateY(-2px);
   }
   75% {
-    transform: translateY(-10px) scale(1.022) rotate(-0.4deg);
+    transform: translateY(-3px);
   }
   100% {
-    transform: translateY(-8px) scale(1.02) rotate(0deg);
+    transform: translateY(-2px);
   }
 }
 
