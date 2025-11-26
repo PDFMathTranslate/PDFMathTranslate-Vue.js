@@ -8,6 +8,7 @@ import ProjectInfo from '@/components/ProjectInfo.vue'
 import DevStatsCard from '@/components/DevStatsCard.vue'
 import DevSettings from '@/components/DevSettings.vue'
 import ServiceChangerCard from '@/components/ServiceChangerCard.vue'
+import BatchProgressCard from '@/components/BatchProgressCard.vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -374,25 +375,80 @@ watch(
   }
 })
 
-const handleFileSelected = async (file) => {
-  console.log('File selected:', file?.name, 'Source:', translationParams.source, 'Is translating:', isTranslating.value)
-  selectedFile.value = file
-  // Ensure source is set to 'File' when a file is selected
-  if (file) {
-    translationParams.source = 'File'
+const batchQueue = ref([])
+const currentBatchIndex = ref(-1)
+const isBatchMode = computed(() => batchQueue.value.length > 0)
+const completedBatchCount = computed(() => batchQueue.value.filter(t => t.status === 'completed' || t.status === 'failed').length)
+const isBatchComplete = computed(() => isBatchMode.value && batchQueue.value.length > 0 && batchQueue.value.every(t => t.status === 'completed' || t.status === 'failed'))
+
+const resetBatch = () => {
+  resetTranslation()
+}
+
+const retryBatch = () => {
+  // Find failed tasks
+  const failedTasks = batchQueue.value.filter(t => t.status === 'failed')
+  if (failedTasks.length === 0) return
+
+  // Reset their status
+  failedTasks.forEach(t => {
+    t.status = 'pending'
+    t.progress = 0
+    t.logs = []
+    t.error = null
+  })
+
+  // Find the index of the first pending task (which was failed)
+  const firstPendingIndex = batchQueue.value.findIndex(t => t.status === 'pending')
+  if (firstPendingIndex !== -1) {
+    currentBatchIndex.value = firstPendingIndex
+    processNextTask()
   }
-  // Automatically start translation when a file is selected/dropped
-  if (file && !isTranslating.value) {
-    // Use nextTick to ensure the file is properly set before starting translation
+}
+
+const handleFileSelected = async (files) => {
+  // Handle single file or array of files
+  const fileList = Array.isArray(files) ? files : [files]
+  
+  if (fileList.length === 0) return
+  
+  console.log('Files selected:', fileList.length, 'Source:', translationParams.source)
+  
+  // If multiple files or we already have a queue, treat as batch
+  if (fileList.length > 1) {
+    // Reset existing state
+    resetTranslation()
+    
+    // Create tasks
+    batchQueue.value = fileList.map((file, index) => ({
+      id: Date.now() + index,
+      file: file,
+      status: 'pending',
+      taskId: null,
+      progress: 0,
+      logs: [],
+      stages: [],
+      error: null,
+      monoPdfUrl: null,
+      dualPdfUrl: null
+    }))
+    
+    translationParams.source = 'File'
+    
+    // Start batch
     await nextTick()
-    console.log('Auto-starting translation for file:', file.name)
-    startTranslation()
+    startBatchTranslation()
   } else {
-    console.log('Translation not started. Reasons:', {
-      hasFile: !!file,
-      isTranslating: isTranslating.value,
-      source: translationParams.source
-    })
+    // Single file - standard behavior
+    const file = fileList[0]
+    selectedFile.value = file
+    if (file) {
+      translationParams.source = 'File'
+    }
+    if (file && !isTranslating.value) {
+      await nextTick()
+      startTranslation()
+    }
   }
 }
 
@@ -510,47 +566,79 @@ watch(logs, (newLogs) => {
   processLogs(newLogs)
 }, { deep: true })
 
-const startTranslation = async () => {
-  if (translationParams.source === 'File' && !selectedFile.value) return
-  if (translationParams.source === 'Link' && !translationParams.url) return
+const startBatchTranslation = async () => {
+  if (batchQueue.value.length === 0) return
   
   isTranslating.value = true
   serviceStatus.value = 'busy'
+  currentBatchIndex.value = 0
+  
+  await processNextTask()
+}
+
+const processNextTask = async () => {
+  if (currentBatchIndex.value >= batchQueue.value.length) {
+    // All tasks done
+    isTranslating.value = false
+    serviceStatus.value = 'ready'
+    taskStatus.value = 'completed' // Global status
+    return
+  }
+  
+  const task = batchQueue.value[currentBatchIndex.value]
+  task.status = 'processing'
+  
+  // Update global state to reflect current task
+  selectedFile.value = task.file
   logs.value = []
   stages.value = []
   currentStage.value = null
-  overallProgress.value = null
-  downloadUrl.value = null
-  monoPdfUrl.value = null
-  dualPdfUrl.value = null
-  taskStatus.value = null
+  overallProgress.value = 0
+  taskStatus.value = 'processing'
+  
+  // Start translation for this task
+  await startTranslation(task)
+}
+
+const startTranslation = async (task = null) => {
+  if (!task && translationParams.source === 'File' && !selectedFile.value) return
+  if (!task && translationParams.source === 'Link' && !translationParams.url) return
+  
+  // If called directly (single file), set global state
+  if (!task) {
+    isTranslating.value = true
+    serviceStatus.value = 'busy'
+    logs.value = []
+    stages.value = []
+    currentStage.value = null
+    overallProgress.value = null
+    downloadUrl.value = null
+    monoPdfUrl.value = null
+    dualPdfUrl.value = null
+    taskStatus.value = null
+  }
   
   try {
     let fileId
     
     if (translationParams.source === 'File') {
       // 1. Upload File
-      const uploadResponse = await api.uploadFile(selectedFile.value)
+      const fileToUpload = task ? task.file : selectedFile.value
+      const uploadResponse = await api.uploadFile(fileToUpload)
       fileId = uploadResponse.data.file_id
     } else {
-      // For URL, we might need a different API endpoint or pass URL directly
-      // This depends on your backend API structure
-      // For now, assuming URL can be passed directly
       fileId = translationParams.url
     }
     
     // 2. Start Translation
-    // Spread all translation params to ensure dynamic service fields are included
     const params = {
       ...translationParams,
-      // Override/add required fields
       file_id: fileId,
       lang_from: translationParams.langFrom,
       lang_to: translationParams.langTo,
       service: translationParams.service,
     }
     
-    // Remove undefined values
     Object.keys(params).forEach(key => {
       if (params[key] === undefined || params[key] === '') {
         delete params[key]
@@ -558,79 +646,144 @@ const startTranslation = async () => {
     })
     
     const translateResponse = await api.translate(params)
-    taskId.value = translateResponse.data.task_id
+    const newTaskId = translateResponse.data.task_id
+    
+    if (task) {
+      task.taskId = newTaskId
+    } else {
+      taskId.value = newTaskId
+    }
     
     // 3. Poll Status
-    pollStatus()
+    pollStatus(task)
     
   } catch (error) {
     console.error('Translation failed:', error)
-    isTranslating.value = false
-    serviceStatus.value = 'error'
-    taskStatus.value = 'failed'
-    logs.value.push(`Error: ${error.message}`)
-    isLogsExpanded.value = true
+    if (task) {
+      task.status = 'failed'
+      task.error = error.message
+      // Move to next task even if this one failed
+      currentBatchIndex.value++
+      setTimeout(processNextTask, 1000)
+    } else {
+      isTranslating.value = false
+      serviceStatus.value = 'error'
+      taskStatus.value = 'failed'
+      logs.value.push(`Error: ${error.message}`)
+      isLogsExpanded.value = true
+    }
   }
 }
 
-const pollStatus = async () => {
-  if (!taskId.value) return
+const pollStatus = async (task = null) => {
+  const currentTaskId = task ? task.taskId : taskId.value
+  if (!currentTaskId) return
   
   try {
-    const response = await api.getStatus(taskId.value)
-    taskStatus.value = response.data.status
-    logs.value = response.data.logs || []
+    const response = await api.getStatus(currentTaskId)
+    const status = response.data.status
+    const newLogs = response.data.logs || []
     
-    if (taskStatus.value === 'completed') {
-      isTranslating.value = false
-      serviceStatus.value = 'ready'
-      overallProgress.value = 100
-      // Set download URLs for mono and dual files
-      if (response.data.mono_pdf_path) {
-        monoPdfUrl.value = `/api/download_task/${taskId.value}/mono`
+    if (task) {
+      task.status = status
+      task.logs = newLogs
+      // Update global logs for display if this is the current task
+      if (batchQueue.value[currentBatchIndex.value] === task) {
+        logs.value = newLogs
+        taskStatus.value = status
       }
-      if (response.data.dual_pdf_path) {
-        dualPdfUrl.value = `/api/download_task/${taskId.value}/dual`
+      
+      // Calculate progress for task
+      // We need to parse logs to get progress for the task object too
+      // Reuse processLogs logic but for the task object?
+      // For now, just rely on the global 'overallProgress' which is updated by the 'logs' watcher
+      // and sync it back to the task
+      if (overallProgress.value !== null) {
+        task.progress = overallProgress.value
       }
-      // Fallback to old downloadUrl for backward compatibility
-      if (!monoPdfUrl.value && !dualPdfUrl.value) {
-        downloadUrl.value = `/api/download_task/${taskId.value}`
+      
+      // Also sync stages
+      if (stages.value.length > 0) {
+        task.stages = stages.value
       }
-
-      // Save to recent files (async - captures thumbnail)
-      const filename = selectedFile.value?.name || translationParams.url || 'Translated PDF'
-      // Don't await - let it run in background to not block download
-      saveToRecentFiles(
-        taskId.value,
-        filename,
-        translationParams.langFrom,
-        translationParams.langTo,
-        !!response.data.mono_pdf_path,
-        !!response.data.dual_pdf_path
-      ).catch(err => console.error('Failed to save recent file:', err))
-
-      // Automatically download files
-      if (monoPdfUrl.value) {
-        downloadMono()
-      }
-      if (dualPdfUrl.value) {
-        setTimeout(() => {
-          downloadDual()
-        }, 1000)
-      }
-    } else if (taskStatus.value === 'failed') {
-      isTranslating.value = false
-      serviceStatus.value = 'error'
-      overallProgress.value = null
-      logs.value.push(`Error: ${response.data.error}`)
-      isLogsExpanded.value = true
     } else {
-      setTimeout(pollStatus, 1000)
+      taskStatus.value = status
+      logs.value = newLogs
+    }
+    
+    if (status === 'completed') {
+      if (task) {
+        task.progress = 100
+        task.monoPdfUrl = response.data.mono_pdf_path ? `/api/download_task/${currentTaskId}/mono` : null
+        task.dualPdfUrl = response.data.dual_pdf_path ? `/api/download_task/${currentTaskId}/dual` : null
+        
+        // Save to recent files
+        saveToRecentFiles(
+          currentTaskId,
+          task.file.name,
+          translationParams.langFrom,
+          translationParams.langTo,
+          !!response.data.mono_pdf_path,
+          !!response.data.dual_pdf_path
+        ).catch(err => console.error('Failed to save recent file:', err))
+        
+        // Move to next task
+        currentBatchIndex.value++
+        setTimeout(processNextTask, 500)
+      } else {
+        isTranslating.value = false
+        serviceStatus.value = 'ready'
+        overallProgress.value = 100
+        if (response.data.mono_pdf_path) {
+          monoPdfUrl.value = `/api/download_task/${currentTaskId}/mono`
+        }
+        if (response.data.dual_pdf_path) {
+          dualPdfUrl.value = `/api/download_task/${currentTaskId}/dual`
+        }
+        if (!monoPdfUrl.value && !dualPdfUrl.value) {
+          downloadUrl.value = `/api/download_task/${currentTaskId}`
+        }
+
+        const filename = selectedFile.value?.name || translationParams.url || 'Translated PDF'
+        saveToRecentFiles(
+          currentTaskId,
+          filename,
+          translationParams.langFrom,
+          translationParams.langTo,
+          !!response.data.mono_pdf_path,
+          !!response.data.dual_pdf_path
+        ).catch(err => console.error('Failed to save recent file:', err))
+
+        if (monoPdfUrl.value) downloadMono()
+        if (dualPdfUrl.value) setTimeout(downloadDual, 1000)
+      }
+    } else if (status === 'failed') {
+      if (task) {
+        task.error = response.data.error
+        // Move to next task
+        currentBatchIndex.value++
+        setTimeout(processNextTask, 1000)
+      } else {
+        isTranslating.value = false
+        serviceStatus.value = 'error'
+        overallProgress.value = null
+        logs.value.push(`Error: ${response.data.error}`)
+        isLogsExpanded.value = true
+      }
+    } else {
+      setTimeout(() => pollStatus(task), 1000)
     }
   } catch (error) {
     console.error('Status check failed:', error)
-    isTranslating.value = false
-    serviceStatus.value = 'error'
+    if (task) {
+      task.status = 'failed'
+      task.error = error.message
+      currentBatchIndex.value++
+      setTimeout(processNextTask, 1000)
+    } else {
+      isTranslating.value = false
+      serviceStatus.value = 'error'
+    }
   }
 }
 
@@ -646,6 +799,10 @@ const resetTranslation = () => {
   monoPdfUrl.value = null
   dualPdfUrl.value = null
   selectedFile.value = null
+  
+  // Reset batch state
+  batchQueue.value = []
+  currentBatchIndex.value = -1
 }
 
 const stopTranslation = async () => {
@@ -1088,8 +1245,20 @@ initRecentFiles()
           :class="{ 'home-text-unselectable': isOnIndex }"
         >
           <div class="space-y-2">
+            <!-- Batch Progress Card -->
+            <BatchProgressCard 
+              v-if="isBatchMode"
+              :tasks="batchQueue"
+              :current-index="currentBatchIndex"
+              :completed-count="completedBatchCount"
+              :total-count="batchQueue.length"
+              :is-batch-complete="isBatchComplete"
+              @reset="resetBatch"
+              @retry="retryBatch"
+            />
+
             <!-- Translation Options - Hidden when translation starts or is in progress -->
-            <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'" class="relative z-20">
+            <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed' && !isBatchMode" class="relative z-20">
               <CardHeader class="flex flex-row items-start justify-between pb-2 space-y-0">
 
                 <div class="space-y-1.5 z-100">
@@ -1128,13 +1297,19 @@ initRecentFiles()
                 </div>
               </CardHeader>
               <CardContent>
-                <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" @open-service-settings="handleOpenServiceSettings" />
+                <TranslationOptions 
+                  v-model="translationParams" 
+                  :config="config" 
+                  @file-selected="handleFileSelected" 
+                  @files-selected="handleFileSelected"
+                  @open-service-settings="handleOpenServiceSettings" 
+                />
               </CardContent>
             </Card>
 
             <!-- Service Changer Card -->
             <ServiceChangerCard 
-              v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'"
+              v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed' && !isBatchMode"
               v-model="translationParams" 
               :config="config"
             />
@@ -1257,7 +1432,7 @@ initRecentFiles()
           </Card>
           
           <!-- Translation Result - Show when translation is complete -->
-          <Card v-if="isTranslationComplete">
+          <Card v-if="isTranslationComplete && !isBatchComplete">
             <CardHeader>
               <CardTitle>{{ t('translation.result') }}</CardTitle>
               <CardDescription>{{ t('translation.resultDescription') }}</CardDescription>

@@ -19,7 +19,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['file-selected', 'update:source', 'update:url'])
+const emit = defineEmits(['file-selected', 'files-selected', 'update:source', 'update:url'])
 
 const isDragging = ref(false)
 const file = ref(null)
@@ -35,17 +35,26 @@ watch(() => props.source, async (val) => {
   }
 })
 
+const files = ref([])
+
 const handleDrop = (e) => {
   isDragging.value = false
   e.preventDefault()
-  const droppedFile = e.dataTransfer.files[0]
-  if (droppedFile) {
-    // Check if it's a PDF by extension or MIME type
-    const isPdf = droppedFile.type === 'application/pdf' || 
-                  droppedFile.name.toLowerCase().endsWith('.pdf')
-    if (isPdf) {
-      file.value = droppedFile
-      emit('file-selected', droppedFile)
+  const droppedFiles = Array.from(e.dataTransfer.files)
+  
+  const validFiles = droppedFiles.filter(f => 
+    f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+  )
+
+  if (validFiles.length > 0) {
+    if (validFiles.length === 1) {
+      file.value = validFiles[0]
+      files.value = [validFiles[0]]
+      emit('file-selected', validFiles[0])
+    } else {
+      file.value = null
+      files.value = validFiles
+      emit('files-selected', validFiles)
     }
   }
 }
@@ -60,14 +69,21 @@ const handleDragLeave = () => {
 }
 
 const handleFileSelect = (e) => {
-  const selectedFile = e.target.files[0]
-  if (selectedFile) {
-    // Check if it's a PDF by extension or MIME type (accept attribute should filter, but double-check)
-    const isPdf = selectedFile.type === 'application/pdf' || 
-                  selectedFile.name.toLowerCase().endsWith('.pdf')
-    if (isPdf) {
-      file.value = selectedFile
-      emit('file-selected', selectedFile)
+  const selectedFiles = Array.from(e.target.files)
+  
+  const validFiles = selectedFiles.filter(f => 
+    f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+  )
+
+  if (validFiles.length > 0) {
+    if (validFiles.length === 1) {
+      file.value = validFiles[0]
+      files.value = [validFiles[0]]
+      emit('file-selected', validFiles[0])
+    } else {
+      file.value = null
+      files.value = validFiles
+      emit('files-selected', validFiles)
     }
   }
 }
@@ -80,7 +96,7 @@ const handleFileSelect = (e) => {
         class="file-dropbox relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300"
         :class="[
           isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
-          file ? 'border-primary bg-primary/5' : ''
+          file || (files && files.length > 0) ? 'border-primary bg-primary/5' : ''
         ]"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
@@ -92,11 +108,12 @@ const handleFileSelect = (e) => {
           type="file"
           class="hidden"
           accept=".pdf"
+          multiple
           @change="handleFileSelect"
         />
         
         <Transition name="fade" mode="out-in">
-          <div v-if="!file" class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+          <div v-if="!file && (!files || files.length === 0)" class="flex flex-col items-center justify-center pt-5 pb-6 text-center">
             <div class="p-3 mb-3 rounded-full bg-primary/10 transition-colors duration-300">
               <Upload class="w-6 h-6 text-primary" />
             </div>
@@ -110,12 +127,22 @@ const handleFileSelect = (e) => {
             <div class="p-3 mb-3 rounded-full bg-primary/10 transition-colors duration-300">
               <FileText class="w-6 h-6 text-primary" />
             </div>
-            <p class="mb-1 text-sm font-medium text-foreground">
-              {{ file.name }}
-            </p>
-            <p class="text-xs text-muted-foreground">
-              {{ (file.size / 1024 / 1024).toFixed(2) }} MB
-            </p>
+            <template v-if="files && files.length > 1">
+              <p class="mb-1 text-sm font-medium text-foreground">
+                {{ t('fileSelector.filesSelected', { count: files.length }) }}
+              </p>
+              <p class="text-xs text-muted-foreground">
+                {{ t('fileSelector.totalSize', { size: (files.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(2) }) }}
+              </p>
+            </template>
+            <template v-else>
+              <p class="mb-1 text-sm font-medium text-foreground">
+                {{ file ? file.name : files[0].name }}
+              </p>
+              <p class="text-xs text-muted-foreground">
+                {{ ((file ? file.size : files[0].size) / 1024 / 1024).toFixed(2) }} MB
+              </p>
+            </template>
           </div>
         </Transition>
       </div>
@@ -157,7 +184,7 @@ const handleFileSelect = (e) => {
 
 .file-dropbox:hover {
   animation: levitate 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
-  transform: translateY(-6px) scale(1.01);
+  transform: translateY(-2px);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 
               0 8px 16px -8px rgba(0, 0, 0, 0.08),
               0 0 0 1px rgba(0, 0, 0, 0.02);
@@ -179,22 +206,22 @@ const handleFileSelect = (e) => {
   }
 }
 
-/* Hover state - more pronounced organic floating */
+/* Hover state - subtle floating */
 @keyframes levitate {
   0% {
-    transform: translateY(-6px) scale(1.01) rotate(0deg);
+    transform: translateY(-2px);
   }
   25% {
-    transform: translateY(-9px) scale(1.012) rotate(0.2deg);
+    transform: translateY(-3px);
   }
   50% {
-    transform: translateY(-6px) scale(1.01) rotate(0deg);
+    transform: translateY(-2px);
   }
   75% {
-    transform: translateY(-9px) scale(1.012) rotate(-0.2deg);
+    transform: translateY(-3px);
   }
   100% {
-    transform: translateY(-6px) scale(1.01) rotate(0deg);
+    transform: translateY(-2px);
   }
 }
 

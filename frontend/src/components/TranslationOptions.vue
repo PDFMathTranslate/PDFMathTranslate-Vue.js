@@ -19,7 +19,9 @@ const props = defineProps({
 
 const model = defineModel()
 
-const emit = defineEmits(['file-selected', 'open-service-settings'])
+const emit = defineEmits(['file-selected', 'files-selected', 'open-service-settings'])
+
+
 
 // Computed properties for languages to ensure stable order if needed
 const languages = computed(() => {
@@ -136,6 +138,10 @@ const handleFileSelected = (file) => {
   emit('file-selected', file)
 }
 
+const handleFilesSelected = (files) => {
+  emit('files-selected', files)
+}
+
 const rotation = ref(0)
 
 const swapLanguages = () => {
@@ -221,6 +227,7 @@ onMounted(() => {
         v-model:source="model.source" 
         v-model:url="model.url" 
         @file-selected="handleFileSelected"
+        @files-selected="handleFilesSelected"
       />
     </div>
 

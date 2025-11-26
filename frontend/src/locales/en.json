@@ -11,7 +11,17 @@
     "changeService": "Chnage Service",
     "freeService": "free service sponsored by",
     "devSponsor": "Development sponsored by",
-    "toTranslate": " to translate."
+    "toTranslate": " to translate.",
+    "filesSelected": "{count} files selected",
+    "totalSize": "{size} MB total"
+  },
+  "batch": {
+    "tasksQueue": "Tasks Queue",
+    "completed": "completed",
+    "failed": "failed",
+    "processing": "processing",
+    "pending": "pending",
+    "retryFailed": "Retry Failed"
   },
   "translation": {
     "options": "File",

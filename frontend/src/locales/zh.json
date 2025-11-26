@@ -11,7 +11,17 @@
     "changeService": "更改服务",
     "freeService": "免费服务赞助",
     "devSponsor": "感谢开发赞助",
-    "toTranslate": " 进行翻译"
+    "toTranslate": " 进行翻译",
+    "filesSelected": "已选择 {count} 个文件",
+    "totalSize": "共 {size} MB"
+  },
+  "batch": {
+    "tasksQueue": "任务队列",
+    "completed": "已完成",
+    "failed": "失败",
+    "processing": "处理中",
+    "pending": "等待中",
+    "retryFailed": "重试失败任务"
   },
   "translation": {
     "options": "翻译",
