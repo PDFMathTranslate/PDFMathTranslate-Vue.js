@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "PDFMathTranslate",
-    "subtitle": "Experiment alpha by Rongxin"
+    "subtitle": "Experimental alpha"
   },
   "fileSelector": {
     "clickToUpload": "Click to upload or drop a PDF file here",

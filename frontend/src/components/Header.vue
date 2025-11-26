@@ -97,7 +97,7 @@ const toggleTheme = () => {
 
 <template>
   <header 
-    class="sticky top-0 z-50 flex items-center justify-between px-6 pb-4 pt-[calc(1rem_+_env(safe-area-inset-top,0px))] border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    class="sticky top-0 z-50 flex items-center justify-between px-6 pb-4 pt-[calc(1rem_+_env(safe-area-inset-top,0px))] border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300"
     :class="{ 'wco-header': isWco }"
   >
     <div class="flex items-center gap-2">

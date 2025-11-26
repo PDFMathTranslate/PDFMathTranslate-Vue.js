@@ -130,7 +130,7 @@ const selectService = (serviceName) => {
 
     <div class="space-y-6">
       <!-- Fallback Warning -->
-      <div v-if="usingFallback" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
+      <div v-if="usingFallback" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 transition-colors duration-300">
         <div class="mt-0.5">⚠️</div>
         <div>
           {{ t('settings.serviceComparisonFallback', { service: currentService }) }}
@@ -138,7 +138,7 @@ const selectService = (serviceName) => {
       </div>
 
       <!-- Source Text -->
-      <div class="p-4 bg-muted/50 rounded-lg space-y-2">
+      <div class="p-4 bg-muted/50 rounded-lg space-y-2 transition-colors duration-300">
         <h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">{{ t('settings.sourceEnglish') }}</h4>
         <p class="text-sm leading-relaxed font-serif">{{ rawText }}</p>
       </div>
@@ -151,7 +151,7 @@ const selectService = (serviceName) => {
           class="border rounded-lg overflow-hidden transition-all hover:shadow-md"
           :class="{ 'ring-2 ring-primary border-primary': item.name === currentService }"
         >
-          <div class="bg-muted/30 px-4 py-3 flex items-center justify-between border-b">
+          <div class="bg-muted/30 px-4 py-3 flex items-center justify-between border-b transition-colors duration-300">
             <div class="flex items-center gap-2">
               <span class="font-semibold">{{ item.name }}</span>
               <Badge v-if="item.name === currentService" variant="default" class="text-xs">
@@ -178,8 +178,8 @@ const selectService = (serviceName) => {
               <!-- Diff View -->
               <span v-for="(part, index) in computeDiff(item.text)" :key="index"
                 :class="{
-                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': part.added,
-                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 line-through decoration-red-500/50': part.removed
+                  'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 transition-colors duration-300': part.added,
+                  'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 line-through decoration-red-500/50 transition-colors duration-300': part.removed
                 }"
               >{{ part.value }}</span>
             </template>

@@ -270,7 +270,7 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
         <Label class="text-base font-medium">{{ t('settings.backendMode') }}</Label>
         <p class="text-sm text-muted-foreground">{{ t('settings.backendModeDescription') }}</p>
       </div>
-      <div class="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+      <div class="flex items-center gap-1 p-1 bg-muted/50 rounded-lg transition-colors duration-300">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>

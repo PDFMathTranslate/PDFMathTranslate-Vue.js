@@ -1096,7 +1096,7 @@ initRecentFiles()
                   <CardTitle>{{ t('translation.options') }}</CardTitle>
                   <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
                 </div>
-                <div class="flex gap-1 bg-muted/30 p-1 rounded-lg">
+                <div class="flex gap-1 bg-muted/30 p-1 rounded-lg transition-colors duration-300">
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -1171,7 +1171,7 @@ initRecentFiles()
               </CardTitle>
             </CardHeader>
             <CardContent class="space-y-4">
-              <div v-if="taskStatus === 'failed'" class="flex flex-col sm:flex-row items-center gap-4 p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive">
+              <div v-if="taskStatus === 'failed'" class="flex flex-col sm:flex-row items-center gap-4 p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive transition-colors duration-300">
                  <div class="flex-1 font-medium flex items-center gap-2">
                    <AlertCircle class="h-5 w-5" />
                    {{ t('translation.failed') || 'Translation Failed' }}
@@ -1386,7 +1386,7 @@ initRecentFiles()
                     <!-- Unavailable overlay badge -->
                     <div 
                       v-if="file.serverAvailable === false" 
-                      class="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted/80 text-muted-foreground backdrop-blur-sm"
+                      class="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted/80 text-muted-foreground backdrop-blur-sm transition-colors duration-300"
                     >
                       {{ t('recentFiles.cached') }}
                     </div>
