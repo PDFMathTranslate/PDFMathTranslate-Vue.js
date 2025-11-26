@@ -328,8 +328,73 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       </div>
     </div>
 
+          <div class="space-y-2">
+            <Label>{{ t('settings.accentColor') }}</Label>
+            <div class="grid grid-cols-5 gap-3">
+              <div 
+                v-for="color in ['black', 'sky', 'lime', 'orange', 'pink']" 
+                :key="color"
+                class="border-2 rounded-lg p-3 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-all"
+                :class="{ 'border-primary ring-2 ring-primary/20': accentColor === color, 'border-border': accentColor !== color }"
+                @click="accentColor = color"
+              >
+                <div 
+                  class="w-8 h-8 rounded-full"
+                  :class="{
+                    'bg-black dark:bg-white': color === 'black',
+                    'bg-sky-800': color === 'sky',
+                    'bg-lime-800': color === 'lime',
+                    'bg-orange-800': color === 'orange',
+                    'bg-pink-800': color === 'pink'
+                  }"
+                />
+                <span class="text-xs font-medium">{{ t(`settings.accentColors.${color}`) }}</span>
+              </div>
+            </div>
+          </div>
+          
     <Accordion type="single" collapsible class="w-full" v-model="accordionValue">
       
+      <AccordionItem value="output-preference">
+        <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="grid grid-cols-3 gap-4">
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': !bilingual && !alternatingPages }"
+              @click="() => { bilingual = false; alternatingPages = false }"
+            >
+              <img src="@/assets/icons/trans-only.png" class="w-12" />
+              <span class="text-sm font-medium">{{ t('settings.monoOnly') }}</span>
+            </div>
+
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': bilingual && !alternatingPages }"
+              @click="() => { bilingual = true; alternatingPages = false }"
+            >
+              <img src="@/assets/icons/compare-hor.png" class="w-12" />
+              <span class="text-sm font-medium">{{ t('settings.bilingual') }}</span>
+            </div>
+
+            <div 
+              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
+              :class="{ 'bg-accent border-primary': alternatingPages }"
+              @click="() => { alternatingPages = true; bilingual = false }"
+            >
+              <img src="@/assets/icons/compare-vert.png" class="w-12" />
+              <span class="text-sm font-medium">{{ t('settings.alternatingPages') }}</span>
+            </div>
+          </div>
+
+          <div class="overflow-hidden">
+            <div class="flex items-center justify-between pt-2" v-if="bilingual">
+              <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
+              <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
       <!-- <AccordionItem value="general">
         <AccordionTrigger>{{ t('settings.general') || 'General' }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
@@ -380,48 +445,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       </AccordionItem> --> 
 
       <!-- New Service Settings Accordion Item -->
-      <AccordionItem value="output-preference">
-        <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
-        <AccordionContent class="space-y-4 pt-2">
-          <div class="grid grid-cols-3 gap-4">
-            <div 
-              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
-              :class="{ 'bg-accent border-primary': !bilingual && !alternatingPages }"
-              @click="() => { bilingual = false; alternatingPages = false }"
-            >
-              <img src="@/assets/icons/trans-only.png" class="w-12" />
-              <span class="text-sm font-medium">{{ t('settings.monoOnly') }}</span>
-            </div>
 
-            <div 
-              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
-              :class="{ 'bg-accent border-primary': bilingual && !alternatingPages }"
-              @click="() => { bilingual = true; alternatingPages = false }"
-            >
-              <img src="@/assets/icons/compare-hor.png" class="w-12" />
-              <span class="text-sm font-medium">{{ t('settings.bilingual') }}</span>
-            </div>
-
-            <div 
-              class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
-              :class="{ 'bg-accent border-primary': alternatingPages }"
-              @click="() => { alternatingPages = true; bilingual = false }"
-            >
-              <img src="@/assets/icons/compare-vert.png" class="w-12" />
-              <span class="text-sm font-medium">{{ t('settings.alternatingPages') }}</span>
-            </div>
-          </div>
-
-          <div class="overflow-hidden">
-            <div class="flex items-center justify-between pt-2" v-if="bilingual">
-              <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
-              <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
-            </div>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-
-      <AccordionItem value="service">
+      <!-- <AccordionItem value="service">
         <AccordionTrigger>{{ t('settings.service') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
           <div class="space-y-2">
@@ -446,10 +471,10 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
                 </div>
               </SelectContent>
             </Select>
-          </div>
+          </div> -->
 
           <!-- Dynamic Service Fields -->
-          <div v-if="currentServiceFields.length > 0" class="space-y-4 pt-2 border-t mt-4">
+          <!-- <div v-if="currentServiceFields.length > 0" class="space-y-4 pt-2 border-t mt-4">
             <div v-for="field in currentServiceFields" :key="field.name" class="space-y-2">
               <Label :for="field.name">{{ t(field.label) }}</Label>
               <Input 
@@ -458,17 +483,17 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
                 :type="field.type" 
                 :placeholder="field.placeholder"
               />
-            </div>
+            </div> -->
 
           <!-- Service Comparison Card -->
-          <ServiceComparisonCard 
+          <!-- <ServiceComparisonCard 
             :current-service="service" 
             :services="services"
             @update:current-service="service = $event"
           />
           </div>
         </AccordionContent>
-      </AccordionItem>
+      </AccordionItem> -->
 
       <AccordionItem value="pdf-processing">
         <AccordionTrigger>{{ t('settings.pdfProcessing') }}</AccordionTrigger>
@@ -571,35 +596,6 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
               type="number" 
               :placeholder="t('settings.termPoolMaxWorkersPlaceholder')"
             />
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="appearance">
-        <AccordionTrigger>{{ t('settings.appearance') }}</AccordionTrigger>
-        <AccordionContent class="space-y-4 pt-2">
-          <div class="space-y-2">
-            <Label>{{ t('settings.accentColor') }}</Label>
-            <div class="grid grid-cols-5 gap-3">
-              <div 
-                v-for="color in ['black', 'sky', 'lime', 'orange', 'pink']" 
-                :key="color"
-                class="border-2 rounded-lg p-3 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-all"
-                :class="{ 'border-primary ring-2 ring-primary/20': accentColor === color, 'border-border': accentColor !== color }"
-                @click="accentColor = color"
-              >
-                <div 
-                  class="w-8 h-8 rounded-full"
-                  :class="{
-                    'bg-black dark:bg-white': color === 'black',
-                    'bg-sky-800': color === 'sky',
-                    'bg-lime-800': color === 'lime',
-                    'bg-orange-800': color === 'orange',
-                    'bg-pink-800': color === 'pink'
-                  }"
-                />
-                <span class="text-xs font-medium">{{ t(`settings.accentColors.${color}`) }}</span>
-              </div>
-            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
