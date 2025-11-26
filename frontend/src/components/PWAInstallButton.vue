@@ -58,10 +58,9 @@ const installApp = async () => {
 <template>
   <Button
     v-if="showInstallButton"
-    variant="outline"
     size="sm"
     @click="installApp"
-    class="gap-2"
+    class="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 focus-visible:ring-accent"
   >
     <Download class="h-4 w-4" />
     {{ t('pwa.install') }}

@@ -93,10 +93,11 @@ const handleFileSelect = (e) => {
   <div class="w-full mt-2">
     <div v-if="source === 'File'">
       <div
-        class="file-dropbox relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300"
+        class="file-dropbox relative group flex flex-col items-center justify-center w-full h-96 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer transition-all duration-300"
         :class="[
-          isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
-          file || (files && files.length > 0) ? 'border-primary bg-primary/5' : ''
+          'hover:border-primary hover:bg-muted/50',
+          isDragging ? 'border-primary' : '',
+          file || (files && files.length > 0) ? 'border-primary' : ''
         ]"
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
