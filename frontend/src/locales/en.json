@@ -10,7 +10,8 @@
     "currentService": "Using ",
     "changeService": "Chnage Service",
     "freeService": "free service sponsored by",
-    "devSponsor": "Development sponsored by"
+    "devSponsor": "Development sponsored by",
+    "toTranslate": " to translate."
   },
   "translation": {
     "options": "File",
@@ -41,7 +42,8 @@
     "resultDescription": "Preview and download your translated PDF",
     "downloadMono": "Translated",
     "downloadDual": "Comparison",
-    "restart": "New Task"
+    "restart": "New Task",
+    "noServicesAvailable": "No services available"
   },
   "settings": {
     "title": "Settings",
@@ -97,6 +99,7 @@
     "skipScannedDetection": "Skip Scanned Detection",
     "ocrWorkaround": "OCR Workaround",
     "autoEnableOcrWorkaround": "Auto Enable OCR Workaround",
+    "serviceSettings": "Service Settings",
     "serviceComparison": "Service Comparison",
     "serviceComparisonDescription": "Compare translation quality across different services and disciplines",
     "serviceComparisonFallback": "Translation for {service} is not available for comparison in this discipline. Using Google as the baseline for comparison.",
@@ -184,5 +187,18 @@
     "statsDescription": "Real-time performance and system metrics",
     "advancedSettingsTitle": "Advanced Parameters",
     "advancedSettingsDescription": "Auto-generated settings from backend configuration"
+  },
+  "serviceFields": {
+    "apiKey": "API Key",
+    "model": "Model",
+    "baseUrl": "Base URL",
+    "apiVersion": "API Version",
+    "host": "Host",
+    "secretId": "Secret ID",
+    "secretKey": "Secret Key",
+    "endpoint": "Endpoint",
+    "url": "URL",
+    "authKey": "Auth Key",
+    "cliPath": "CLI Path"
   }
 }

@@ -7,6 +7,7 @@ import ApplicationSettings from '@/components/ApplicationSettings.vue'
 import ProjectInfo from '@/components/ProjectInfo.vue'
 import DevStatsCard from '@/components/DevStatsCard.vue'
 import DevSettings from '@/components/DevSettings.vue'
+import ServiceChangerCard from '@/components/ServiceChangerCard.vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -1074,49 +1075,58 @@ initRecentFiles()
     <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
         <div v-if="!showSettings" key="main" class="max-w-4xl mx-auto space-y-8">
-          <!-- Translation Options - Hidden when translation starts or is in progress -->
-          <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'">
-            <CardHeader class="flex flex-row items-start justify-between pb-2 space-y-0">
+          <div class="space-y-2">
+            <!-- Translation Options - Hidden when translation starts or is in progress -->
+            <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'" class="relative z-20">
+              <CardHeader class="flex flex-row items-start justify-between pb-2 space-y-0">
 
-              <div class="space-y-1.5">
-                <CardTitle>{{ t('translation.options') }}</CardTitle>
-                <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
-              </div>
-              <div class="flex gap-1 bg-muted/30 p-1 rounded-lg">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  @click="translationParams.source = 'File'" 
-                  class="transition-all duration-300 rounded-md hover:bg-background/50"
-                  :class="translationParams.source === 'File' 
-                    ? 'bg-background shadow-sm text-primary' 
-                    : 'text-muted-foreground hover:text-primary'"
-                  :title="t('translation.file')"
-                >
-                  <FileText 
-                    class="w-4 h-4 transition-colors duration-300" 
-                  />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  @click="translationParams.source = 'Link'" 
-                  class="transition-all duration-300 rounded-md hover:bg-background/50"
-                  :class="translationParams.source === 'Link' 
-                    ? 'bg-background shadow-sm text-primary' 
-                    : 'text-muted-foreground hover:text-primary'"
-                  :title="t('translation.link')"
-                >
-                  <LinkIcon 
-                    class="w-4 h-4 transition-colors duration-300" 
-                  />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" @open-service-settings="handleOpenServiceSettings" />
-            </CardContent>
-          </Card>
+                <div class="space-y-1.5 z-100">
+                  <CardTitle>{{ t('translation.options') }}</CardTitle>
+                  <CardDescription>{{ t('translation.optionsDescription') }}</CardDescription>
+                </div>
+                <div class="flex gap-1 bg-muted/30 p-1 rounded-lg">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    @click="translationParams.source = 'File'" 
+                    class="transition-all duration-300 rounded-md hover:bg-background/50"
+                    :class="translationParams.source === 'File' 
+                      ? 'bg-background shadow-sm text-primary' 
+                      : 'text-muted-foreground hover:text-primary'"
+                    :title="t('translation.file')"
+                  >
+                    <FileText 
+                      class="w-4 h-4 transition-colors duration-300" 
+                    />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    @click="translationParams.source = 'Link'" 
+                    class="transition-all duration-300 rounded-md hover:bg-background/50"
+                    :class="translationParams.source === 'Link' 
+                      ? 'bg-background shadow-sm text-primary' 
+                      : 'text-muted-foreground hover:text-primary'"
+                    :title="t('translation.link')"
+                  >
+                    <LinkIcon 
+                      class="w-4 h-4 transition-colors duration-300" 
+                    />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <TranslationOptions v-model="translationParams" :config="config" @file-selected="handleFileSelected" @open-service-settings="handleOpenServiceSettings" />
+              </CardContent>
+            </Card>
+
+            <!-- Service Changer Card -->
+            <ServiceChangerCard 
+              v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'"
+              v-model="translationParams" 
+              :config="config"
+            />
+          </div>
           
           <!-- Progress Box - Show during translation or failure -->
           <Card v-if="isTranslating || (overallProgress !== null && !isTranslationComplete) || taskStatus === 'failed'">

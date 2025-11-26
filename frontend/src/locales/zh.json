@@ -10,7 +10,8 @@
     "currentService": "将使用",
     "changeService": "更改服务",
     "freeService": "免费服务赞助",
-    "devSponsor": "感谢开发赞助"
+    "devSponsor": "感谢开发赞助",
+    "toTranslate": " 进行翻译"
   },
   "translation": {
     "options": "翻译",
@@ -41,7 +42,8 @@
     "resultDescription": "预览并下载翻译后的PDF",
     "downloadMono": "下载单语PDF",
     "downloadDual": "下载双语PDF",
-    "restart": "开始新翻译"
+    "restart": "开始新翻译",
+    "noServicesAvailable": "暂无可用服务"
   },
   "settings": {
     "title": "设置",
@@ -97,8 +99,9 @@
     "skipScannedDetection": "跳过扫描检测",
     "ocrWorkaround": "使用字符识别方案",
     "autoEnableOcrWorkaround": "自动启用字符识别方案",
+    "serviceSettings": "服务设置",
     "serviceComparison": "服务对比",
-    "serviceComparisonDescription": "比较不同服务和学科的翻译质量。高亮显示的差异是相对于当前选择的服务的。",
+    "serviceComparisonDescription": "比较不同服务和学科的翻译质量",
     "serviceComparisonFallback": "该学科下暂无 {service} 的翻译结果。将使用 Google 作为对比基准。",
     "sourceEnglish": "原文 (英语)",
     "current": "当前",
@@ -184,5 +187,18 @@
     "statsDescription": "实时性能和系统指标",
     "advancedSettingsTitle": "高级参数",
     "advancedSettingsDescription": "从后端配置自动生成的设置"
+  },
+  "serviceFields": {
+    "apiKey": "API Key",
+    "model": "模型",
+    "baseUrl": "Base URL",
+    "apiVersion": "API 版本",
+    "host": "主机",
+    "secretId": "Secret ID",
+    "secretKey": "Secret Key",
+    "endpoint": "端点",
+    "url": "URL",
+    "authKey": "认证密钥",
+    "cliPath": "CLI 路径"
   }
 }
