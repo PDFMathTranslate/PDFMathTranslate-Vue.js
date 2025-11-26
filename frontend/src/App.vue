@@ -1710,20 +1710,6 @@ initRecentFiles()
   transition: background-color 0.3s ease;
 }
 
-.recent-file-card:hover {
-  /* No animations on hover */
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  .recent-file-card {
-    animation: none;
-  }
-  .recent-file-card:hover {
-    animation: none;
-  }
-}
-
 .home-text-unselectable :deep(button),
 .home-text-unselectable :deep(button *) {
   user-select: none;
