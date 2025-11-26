@@ -26,7 +26,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const isExpanded = ref(false)
-const hasInteracted = ref(false)
 const hoverHintActive = ref(false)
 let hoverHintTimer = null
 
@@ -52,9 +51,6 @@ const currentServiceFields = computed(() => {
 })
 
 const toggleExpand = () => {
-  if (!hasInteracted.value) {
-    hasInteracted.value = true
-  }
   isExpanded.value = !isExpanded.value
 }
 
@@ -78,7 +74,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="w-full flex justify-center px-6 mb-0 py-0">
     <Card 
-      class="service-changer-card overflow-hidden shadow-sm w-full cursor-pointer -mt-4 transition-transform duration-200 ease-out hover:translate-y-0.5 rounded-t-none"
+      class="service-changer-card overflow-hidden shadow-sm w-full cursor-pointer -mt-4 transition-transform duration-200 ease-out rounded-t-none"
       :class="{ 'is-expanded': isExpanded, 'is-hover-hint': hoverHintActive && !isExpanded }"
       @click="toggleExpand"
       @mouseenter="handleHover"
@@ -124,10 +120,7 @@ onBeforeUnmount(() => {
           <div class="overflow-hidden">
             <div 
               class="peek-content p-6 space-y-6 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
-              :class="[
-                isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4',
-                hasInteracted ? (isExpanded ? 'cat-peek' : 'cat-hide') : ''
-              ]"
+              :class="isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
             >
               <!-- Service Selector -->
               <div class="space-y-2">
@@ -200,49 +193,7 @@ onBeforeUnmount(() => {
 
 .service-changer-card:not(.is-expanded).is-hover-hint {
   animation: hoverPeek 1.1s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.service-changer-card .peek-content.cat-peek {
-  animation: catPeek 620ms cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-.service-changer-card .peek-content.cat-hide {
-  animation: catHide 420ms cubic-bezier(0.55, 0, 0.45, 1);
-}
-
-@keyframes catPeek {
-  0% {
-    transform: translateY(18px) scaleY(0.85);
-    opacity: 0;
-  }
-  25% {
-    transform: translateY(-6px) scaleY(1.05);
-    opacity: 1;
-  }
-  45% {
-    transform: translateY(4px) scaleY(0.98);
-  }
-  70% {
-    transform: translateY(-3px) scaleY(1.01);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-    opacity: 1;
-  }
-}
-
-@keyframes catHide {
-  0% {
-    transform: translateY(0) scaleY(1);
-    opacity: 1;
-  }
-  30% {
-    transform: translateY(-4px) scaleY(0.98);
-  }
-  100% {
-    transform: translateY(16px) scaleY(0.82);
-    opacity: 0;
-  }
+  animation-fill-mode: forwards;
 }
 
 @keyframes hoverPeek {
