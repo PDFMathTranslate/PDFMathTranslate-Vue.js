@@ -50,10 +50,7 @@ More minor improvements:
 
 ### How to build and install
 ```
-cd ./frontend
-bun run build
-uv tool install -e ../
-pdf2zh_next --gui
+sh ./gui.dev.sh
 ```
 
 The first and second step will be removed after the development.
