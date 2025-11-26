@@ -149,7 +149,6 @@ const handleFileSelect = (e) => {
 
 /* Elegant floating animation for file dropbox */
 .file-dropbox {
-  animation: subtle-breathe 4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
               box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.3s ease,

@@ -1535,9 +1535,8 @@ initRecentFiles()
   --float-delay: 0s;
   --entrance-delay: 0s;
   animation: 
-    card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-delay) both,
-    card-idle 5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
-  animation-delay: var(--entrance-delay), calc(var(--entrance-delay) + var(--float-delay));
+    card-entrance 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--entrance-delay) both;
+  animation-delay: var(--entrance-delay);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), 
               box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1),
               background-color 0.3s ease;

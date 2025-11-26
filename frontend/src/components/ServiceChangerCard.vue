@@ -56,7 +56,7 @@ const toggleExpand = () => {
 <template>
   <div class="w-full flex justify-center px-6 mb-0  py-0 ">
     <Card 
-      class="overflow-hidden shadow-sm w-full cursor-pointer -mt-4"
+      class="overflow-hidden shadow-sm w-full cursor-pointer -mt-4 transition-transform duration-200 ease-out hover:translate-y-0.5 rounded-t-none"
       @click="toggleExpand"
     >
       <CardContent class="px-4  z-10 pt-6 pb-4">
@@ -64,7 +64,7 @@ const toggleExpand = () => {
         <div 
           class="flex items-center justify-between py-0 transition-colors"
         >
-          <div class="flex items-center gap-3 text-sm text-muted-foreground flex-1 justify-center  py-0 ">
+          <div class="flex items-center gap-3 text-sm text-muted-foreground flex-1 justify-center  py-0 select-none">
             <template v-if="!isExpanded">
               <div class="flex items-center gap-1">
                 <span>{{ t('fileSelector.currentService') }}</span>
@@ -93,12 +93,15 @@ const toggleExpand = () => {
 
         <!-- Expanded Content -->
         <div 
-          class="grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+          class="grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
           :class="isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
           @click.stop
         >
           <div class="overflow-hidden">
-            <div class="p-6 space-y-6">
+            <div 
+              class="p-6 space-y-6 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              :class="isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'"
+            >
               <!-- Service Selector -->
               <div class="space-y-2">
                 <Label>{{ t('translation.selectService') }}</Label>
