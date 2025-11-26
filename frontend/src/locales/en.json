@@ -157,6 +157,7 @@
     "memory": "Memory",
     "activeTasks": "Active Tasks",
     "pendingTasks": "Pending Tasks",
+    "currentTasks": "Current Tasks",
     "errorFetchingHealth": "Error fetching health info"
   },
   "recentFiles": {

@@ -280,6 +280,10 @@ const copyCitation = async () => {
               <div class="space-y-1.5">
                 <p class="font-semibold">{{ statusTitle }}</p>
                 <template v-if="health && !health.error">
+                  <div class="flex justify-between items-center">
+                    <span class="text-muted-foreground">{{ t('service.currentTasks') }}:</span>
+                    <span class="font-mono">{{ (health.active_tasks || 0) + (health.pending_tasks || 0) }}</span>
+                  </div>
                   <div class="text-xs space-y-1 border-t pt-1.5 mt-1.5">
                     <div class="flex justify-between items-center">
                       <span class="text-muted-foreground">{{ t('service.cpu') }}:</span>
@@ -301,14 +305,22 @@ const copyCitation = async () => {
                     </div>
                   </div>
                 </template>
-                <p v-else-if="health && health.error" class="text-xs text-red-500">
-                  {{ t('service.errorFetchingHealth') }}
-                </p>
+                <template v-else-if="health && health.error">
+                  <p class="text-xs text-red-500">
+                    {{ t('service.errorFetchingHealth') }}
+                  </p>
+                </template>
+                <template v-else>
+                  <div class="flex justify-between items-center">
+                    <span class="text-muted-foreground">{{ t('service.currentTasks') }}:</span>
+                    <span class="font-mono">0</span>
+                  </div>
+                </template>
               </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        {{ t('app.subtitle') }}
+        <p class="text-xs text-muted-foreground">{{ t('app.subtitle') }}</p>
       </div>
       
       <div
