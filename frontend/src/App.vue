@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import api from '@/services/api'
-import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2, Zap } from 'lucide-vue-next'
+import { Loader2, ChevronDown, ChevronUp, Download, RefreshCw, Check, Square, AlertCircle, FileText, Link as LinkIcon, Trash2, Zap, X } from 'lucide-vue-next'
 import VuePdfEmbed from 'vue-pdf-embed'
 import {
   Tooltip,
@@ -66,6 +66,14 @@ const isOnIndex = computed(() =>
   taskStatus.value !== 'completed' && 
   taskStatus.value !== 'failed'
 )
+
+// Check if running in PWA mode (standalone or window-controls-overlay)
+const isPWA = computed(() => {
+  if (typeof window === 'undefined') return false
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const isWcoMode = window.matchMedia('(display-mode: window-controls-overlay)').matches
+  return isStandalone || isWcoMode
+})
 const serviceStatus = ref('ready') // ready, busy, error
 const healthInfo = ref(null) // Store health information including CPU load
 const showSettings = ref(false)
@@ -1116,19 +1124,21 @@ initRecentFiles()
               <CardTitle class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <Loader2 v-if="isTranslating" class="h-5 w-5 animate-spin" />
-                  {{ currentStage || t('translation.starting') }}
+                  {{ overallProgress === null || overallProgress === 0 
+                    ? t('translation.starting') 
+                    : `${t('translation.processing') || 'Processing'} (${overallProgress.toFixed(1)}%)` }}
                 </div>
                 <TooltipProvider v-if="isTranslating">
                   <Tooltip>
                     <TooltipTrigger as-child>
                       <Button 
-                        variant="destructive" 
+                        variant="outline" 
                         size="sm" 
                         class="h-8"
                         @click="stopTranslation"
                       >
                         <Square class="w-4 h-4 mr-2" fill="currentColor" />
-                        {{ t('translation.stop') }}
+                        {{ t('translation.cancel') || 'Cancel' }}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -1137,9 +1147,6 @@ initRecentFiles()
                   </Tooltip>
                 </TooltipProvider>
               </CardTitle>
-              <CardDescription v-if="overallProgress !== null">
-                {{ overallProgress.toFixed(1) }}% {{ t('translation.complete') || 'complete' }}
-              </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
               <div v-if="taskStatus === 'failed'" class="flex flex-col sm:flex-row items-center gap-4 p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive">
@@ -1167,9 +1174,10 @@ initRecentFiles()
                  </div>
               </div>
 
-              <div v-if="taskStatus !== 'failed'" class="space-y-2">
+              <!-- Progress bar - commented out for simplified UI -->
+              <!-- <div v-if="taskStatus !== 'failed'" class="space-y-2">
                   <Progress :value="overallProgress !== null ? overallProgress : 0" class="w-full" />
-              </div>
+              </div> -->
               
               <!-- Stages List -->
               <div v-if="stages.length > 0 && taskStatus !== 'failed'" class="mt-4 h-9 overflow-hidden relative">
@@ -1409,7 +1417,7 @@ initRecentFiles()
 
         <div v-else key="settings" class="max-w-3xl mx-auto space-y-6">
           <Card class="h-full">
-            <CardHeader>
+            <CardHeader class="relative">
               <CardTitle class="flex items-center gap-2">
                 {{ t('settings.title') }}
                 <Transition name="fade">
@@ -1420,6 +1428,16 @@ initRecentFiles()
                   {{ t('devMode.badge') }}
                 </span>
               </CardTitle>
+              <Button
+                v-if="isPWA"
+                variant="ghost"
+                size="icon"
+                class="absolute top-6 right-6"
+                @click="handleGoHome"
+              >
+                <X class="h-4 w-4" />
+                <span class="sr-only">{{ t('common.close') }}</span>
+              </Button>
             </CardHeader>
             <CardContent>
               <ApplicationSettings v-model="translationParams" :config="config" :open-accordion="openAccordionItem" />

@@ -27,8 +27,10 @@
     "selectService": "选择服务",
     "startTranslation": "开始翻译",
     "starting": "启动中...",
+    "processing": "翻译中",
     "translating": "翻译中...",
     "stop": "停止",
+    "cancel": "取消",
     "retry": "重试",
     "startNew": "开始新任务",
     "failed": "失败",
@@ -164,6 +166,15 @@
     "mono": "译文",
     "dual": "对照",
     "cached": "已缓存"
+  },
+  "citation": {
+    "title": "引用",
+    "citeThisWork": "引用本项目",
+    "copyBibtex": "复制 BibTeX",
+    "copy": "复制",
+    "copied": "已复制！",
+    "formattedCitation": "格式化引用",
+    "selectStyle": "选择引用格式..."
   },
   "devMode": {
     "enabled": "开发模式已激活",

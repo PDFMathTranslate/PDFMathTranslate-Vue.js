@@ -21,7 +21,11 @@
     "service": "Servicio",
     "selectService": "Seleccionar servicio",
     "startTranslation": "Iniciar traducción",
+    "starting": "Iniciando...",
+    "processing": "Procesando",
     "translating": "Traduciendo...",
+    "stop": "Detener",
+    "cancel": "Cancelar",
     "download": "Descargar PDF traducido",
     "result": "Translation Result",
     "resultDescription": "Preview and download your translated PDF",
@@ -123,6 +127,15 @@
     "mono": "Mono",
     "dual": "Dual",
     "cached": "En caché"
+  },
+  "citation": {
+    "title": "Citar",
+    "citeThisWork": "Citar este proyecto",
+    "copyBibtex": "Copiar BibTeX",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "formattedCitation": "Cita formateada",
+    "selectStyle": "Seleccionar estilo de cita..."
   },
   "devMode": {
     "enabled": "Modo desarrollador activo",

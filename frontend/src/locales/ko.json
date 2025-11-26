@@ -21,7 +21,11 @@
     "service": "서비스",
     "selectService": "서비스 선택",
     "startTranslation": "번역 시작",
+    "starting": "시작 중...",
+    "processing": "처리 중",
     "translating": "번역 중...",
+    "stop": "중지",
+    "cancel": "취소",
     "download": "번역된 PDF 다운로드",
     "result": "Translation Result",
     "resultDescription": "Preview and download your translated PDF",
@@ -123,6 +127,15 @@
     "mono": "번역",
     "dual": "비교",
     "cached": "캐시됨"
+  },
+  "citation": {
+    "title": "인용",
+    "citeThisWork": "이 프로젝트 인용",
+    "copyBibtex": "BibTeX 복사",
+    "copy": "복사",
+    "copied": "복사됨!",
+    "formattedCitation": "형식화된 인용",
+    "selectStyle": "인용 스타일 선택..."
   },
   "devMode": {
     "enabled": "개발 모드 활성화",

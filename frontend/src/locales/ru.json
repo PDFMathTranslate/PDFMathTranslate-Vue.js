@@ -21,7 +21,11 @@
     "service": "Сервис",
     "selectService": "Выбрать сервис",
     "startTranslation": "Начать перевод",
+    "starting": "Запуск...",
+    "processing": "Обработка",
     "translating": "Перевод...",
+    "stop": "Остановить",
+    "cancel": "Отмена",
     "download": "Скачать переведенный PDF",
     "result": "Translation Result",
     "resultDescription": "Preview and download your translated PDF",
@@ -114,6 +118,15 @@
     "mono": "Моно",
     "dual": "Двойной",
     "cached": "Кэшировано"
+  },
+  "citation": {
+    "title": "Цитировать",
+    "citeThisWork": "Цитировать этот проект",
+    "copyBibtex": "Копировать BibTeX",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "formattedCitation": "Форматированная цитата",
+    "selectStyle": "Выбрать стиль цитирования..."
   },
   "devMode": {
     "enabled": "Режим разработчика активен",

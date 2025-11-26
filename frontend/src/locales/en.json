@@ -30,8 +30,10 @@
     "selectService": "Select service",
     "startTranslation": "Start Translation",
     "starting": "Starting...",
+    "processing": "Processing",
     "translating": "Translating...",
     "stop": "Stop",
+    "cancel": "Cancel",
     "stoppedByUser": "Stopped by user",
     "originalFilePreview": "Original File Preview",
     "download": "Download Translated PDF",
@@ -164,6 +166,15 @@
     "mono": "Mono",
     "dual": "Dual",
     "cached": "Cached"
+  },
+  "citation": {
+    "title": "Cite",
+    "citeThisWork": "Cite This Work",
+    "copyBibtex": "Copy BibTeX",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "formattedCitation": "Formatted Citation",
+    "selectStyle": "Select citation style..."
   },
   "devMode": {
     "enabled": "Dev Mode Active",

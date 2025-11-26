@@ -21,8 +21,11 @@
     "service": "サービス",
     "selectService": "サービスを選択",
     "startTranslation": "翻訳を開始",
+    "starting": "開始中...",
+    "processing": "処理中",
     "translating": "翻訳中...",
     "stop": "停止",
+    "cancel": "キャンセル",
     "stoppedByUser": "ユーザーにより停止されました",
     "download": "翻訳済みPDFをダウンロード",
     "result": "Translation Result",
@@ -125,6 +128,15 @@
     "mono": "翻訳",
     "dual": "対照",
     "cached": "キャッシュ済"
+  },
+  "citation": {
+    "title": "引用",
+    "citeThisWork": "このプロジェクトを引用",
+    "copyBibtex": "BibTeX をコピー",
+    "copy": "コピー",
+    "copied": "コピー完了！",
+    "formattedCitation": "フォーマット済み引用",
+    "selectStyle": "引用スタイルを選択..."
   },
   "devMode": {
     "enabled": "開発モード有効",

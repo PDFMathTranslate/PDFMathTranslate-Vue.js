@@ -22,8 +22,10 @@
     "selectService": "選擇服務",
     "startTranslation": "開始翻譯",
     "starting": "啟動中...",
+    "processing": "翻譯中",
     "translating": "翻譯中...",
     "stop": "停止",
+    "cancel": "取消",
     "stoppedByUser": "用戶已停止",
     "download": "下載翻譯後的PDF",
     "result": "翻譯結果",
@@ -126,6 +128,15 @@
     "mono": "譯文",
     "dual": "對照",
     "cached": "已快取"
+  },
+  "citation": {
+    "title": "引用",
+    "citeThisWork": "引用本專案",
+    "copyBibtex": "複製 BibTeX",
+    "copy": "複製",
+    "copied": "已複製！",
+    "formattedCitation": "格式化引用",
+    "selectStyle": "選擇引用格式..."
   },
   "devMode": {
     "enabled": "開發模式已啟用",
