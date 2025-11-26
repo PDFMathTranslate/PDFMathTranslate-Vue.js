@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, reactive, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, computed, watch, watchEffect, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Header from '@/components/Header.vue'
 import TranslationOptions from '@/components/TranslationOptions.vue'
@@ -74,6 +74,13 @@ const isPWA = computed(() => {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
   const isWcoMode = window.matchMedia('(display-mode: window-controls-overlay)').matches
   return isStandalone || isWcoMode
+})
+
+// Ensure installed PWA windows display a consistent title
+watchEffect(() => {
+  if (isPWA.value && typeof document !== 'undefined') {
+    document.title = 'PDFMathTranslate'
+  }
 })
 const serviceStatus = ref('ready') // ready, busy, error
 const healthInfo = ref(null) // Store health information including CPU load
@@ -1074,7 +1081,12 @@ initRecentFiles()
     
     <main class="container py-10 mx-auto px-6 flex-1" :class="{ 'my-6': isWco }">
       <Transition name="fade" mode="out-in">
-        <div v-if="!showSettings" key="main" class="max-w-4xl mx-auto space-y-8">
+        <div
+          v-if="!showSettings"
+          key="main"
+          class="max-w-4xl mx-auto space-y-8"
+          :class="{ 'home-text-unselectable': isOnIndex }"
+        >
           <div class="space-y-2">
             <!-- Translation Options - Hidden when translation starts or is in progress -->
             <Card v-if="!isTranslating && overallProgress === null && !isTranslationComplete && taskStatus !== 'failed'" class="relative z-20">
@@ -1142,9 +1154,9 @@ initRecentFiles()
                   <Tooltip>
                     <TooltipTrigger as-child>
                       <Button 
-                        variant="outline" 
+                        variant="destructive" 
                         size="sm" 
-                        class="h-8"
+                        class="h-8 text-white hover:bg-destructive/90"
                         @click="stopTranslation"
                       >
                         <Square class="w-4 h-4 mr-2" fill="currentColor" />
@@ -1616,5 +1628,19 @@ initRecentFiles()
     animation: none;
     transform: translateY(-2px);
   }
+}
+
+.home-text-unselectable :deep(button),
+.home-text-unselectable :deep(button *) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.home-text-unselectable :deep([data-card-title]),
+.home-text-unselectable :deep([data-card-title] *),
+.home-text-unselectable :deep([data-card-description]),
+.home-text-unselectable :deep([data-card-description] *) {
+  user-select: none;
+  -webkit-user-select: none;
 }
 </style>
