@@ -257,6 +257,10 @@ const currentServiceFields = computed(() => {
 // Version info from config
 const stableVersion = computed(() => props.config?.versions?.stable || 'unknown')
 const experimentalVersion = computed(() => props.config?.versions?.experimental || 'unknown')
+
+// Check if we're using stable backend
+const isStableBackend = computed(() => translationBackend.value === 'stable')
+const isExperimentalBackend = computed(() => translationBackend.value === 'experimental')
 </script>
 
 <template>
@@ -333,7 +337,7 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       <AccordionItem value="output-preference">
         <AccordionTrigger>{{ t('settings.outputPreference') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
-          <div class="grid grid-cols-3 gap-4">
+          <div :class="isExperimentalBackend ? 'grid grid-cols-3 gap-4' : 'grid grid-cols-2 gap-4'">
             <div 
               class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
               :class="{ 'bg-accent border-primary': !bilingual && !alternatingPages }"
@@ -352,7 +356,9 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
               <span class="text-sm font-medium">{{ t('settings.bilingual') }}</span>
             </div>
 
+            <!-- Alternating pages only available in experimental backend -->
             <div 
+              v-if="isExperimentalBackend"
               class="border rounded-lg p-4 cursor-pointer flex flex-col items-center gap-2 hover:bg-accent transition-colors"
               :class="{ 'bg-accent border-primary': alternatingPages }"
               @click="() => { alternatingPages = true; bilingual = false }"
@@ -363,7 +369,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
           </div>
 
           <div class="overflow-hidden">
-            <div class="flex items-center justify-between pt-2" v-if="bilingual">
+            <!-- Only show dualTranslateFirst and alternatingPages for experimental backend -->
+            <div class="flex items-center justify-between pt-2" v-if="bilingual && isExperimentalBackend">
               <Label for="dual-translate-first">{{ t('settings.dualTranslateFirst') }}</Label>
               <Switch id="dual-translate-first" v-model="dualTranslateFirst" />
             </div>
@@ -473,7 +480,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
       <AccordionItem value="pdf-processing">
         <AccordionTrigger>{{ t('settings.pdfProcessing') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
-          <div class="space-y-2">
+          <!-- Watermark output mode only for experimental backend -->
+          <div class="space-y-2" v-if="isExperimentalBackend">
             <Label for="watermark-output-mode">{{ t('settings.watermarkOutputMode') }}</Label>
             <Select v-model="watermarkOutputMode">
               <SelectTrigger>
@@ -494,7 +502,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
               :placeholder="t('settings.pagesPlaceholder')"
             />
           </div>
-          <div class="space-y-2">
+          <!-- Max pages per part only for experimental backend -->
+          <div class="space-y-2" v-if="isExperimentalBackend">
             <Label for="max-pages-per-part">{{ t('settings.maxPagesPerPart') }}</Label>
             <Input 
               id="max-pages-per-part" 
@@ -513,7 +522,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
             <Label for="ignore-cache">{{ t('settings.ignoreCache') }}</Label>
             <Switch id="ignore-cache" v-model="ignoreCache" />
           </div>
-          <div class="space-y-2">
+          <!-- Min text length only for experimental backend -->
+          <div class="space-y-2" v-if="isExperimentalBackend">
             <Label for="min-text-length">{{ t('settings.minTextLength') }}</Label>
             <Input 
               id="min-text-length" 
@@ -522,7 +532,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
               :placeholder="t('settings.minTextLengthPlaceholder')"
             />
           </div>
-          <div class="space-y-2">
+          <!-- Custom system prompt only for experimental backend -->
+          <div class="space-y-2" v-if="isExperimentalBackend">
             <Label for="custom-system-prompt">{{ t('settings.customSystemPrompt') }}</Label>
             <Input 
               id="custom-system-prompt" 
@@ -533,7 +544,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="rate-limiting">
+      <!-- Rate limiting only for experimental backend -->
+      <AccordionItem value="rate-limiting" v-if="isExperimentalBackend">
         <AccordionTrigger>{{ t('settings.rateLimiting') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
           <div class="space-y-2">
@@ -575,7 +587,8 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="advanced">
+      <!-- Advanced options only for experimental backend -->
+      <AccordionItem value="advanced" v-if="isExperimentalBackend">
         <AccordionTrigger>{{ t('settings.advanced') }}</AccordionTrigger>
         <AccordionContent class="space-y-4 pt-2">
           <div class="flex items-center justify-between">
@@ -601,6 +614,13 @@ const experimentalVersion = computed(() => props.config?.versions?.experimental 
           </div>
         </AccordionContent>
       </AccordionItem>
+      
+      <!-- Reset settings button for stable backend (without advanced options) -->
+      <div v-if="isStableBackend" class="pt-4">
+        <Button variant="destructive" class="w-full" @click="resetSettings">
+          {{ t('settings.resetSettings') }}
+        </Button>
+      </div>
     </Accordion>
 
     <div class="space-y-2">
