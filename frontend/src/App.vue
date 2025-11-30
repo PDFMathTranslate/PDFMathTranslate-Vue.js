@@ -259,17 +259,61 @@ onUnmounted(() => {
   }
 })
 
-// Load preferences from localStorage
-const loadPreferences = () => {
-  const stored = localStorage.getItem('translationPreferences')
+// Load preferences from localStorage for a specific backend
+const loadPreferences = (backend = null) => {
+  // If no backend specified, try to load from legacy storage or default to stable
+  if (!backend) {
+    const legacyStored = localStorage.getItem('translationPreferences')
+    if (legacyStored) {
+      try {
+        const legacy = JSON.parse(legacyStored)
+        // Migrate legacy preferences to backend-specific storage
+        const legacyBackend = legacy.translationBackend || 'stable'
+        const key = `translationPreferences_${legacyBackend}`
+        // Only migrate if backend-specific storage doesn't exist
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, legacyStored)
+        }
+        // Clean up legacy storage after migration
+        localStorage.removeItem('translationPreferences')
+        return legacy
+      } catch (e) {
+        console.error('Failed to parse stored preferences:', e)
+      }
+    }
+    // Default to stable if no legacy storage
+    backend = 'stable'
+  }
+  
+  const key = `translationPreferences_${backend}`
+  const stored = localStorage.getItem(key)
   if (stored) {
     try {
       return JSON.parse(stored)
     } catch (e) {
-      console.error('Failed to parse stored preferences:', e)
+      console.error(`Failed to parse stored preferences for ${backend}:`, e)
     }
   }
   return null
+}
+
+// Save preferences to localStorage for a specific backend
+const savePreferences = (preferences, backend) => {
+  if (!backend) {
+    backend = preferences.translationBackend || 'stable'
+  }
+  
+  // Create a clean copy without undefined values for storage
+  const toStore = { ...preferences }
+  // Remove undefined values
+  Object.keys(toStore).forEach(key => {
+    if (toStore[key] === undefined) {
+      delete toStore[key]
+    }
+  })
+  
+  const key = `translationPreferences_${backend}`
+  localStorage.setItem(key, JSON.stringify(toStore))
 }
 
 // Default preferences
@@ -311,9 +355,13 @@ const defaultPreferences = {
   autoEnableOcrWorkaround: false,
 }
 
+// Initialize with default backend (stable)
+const initialBackend = 'stable'
+const initialPreferences = loadPreferences(initialBackend) || loadPreferences() || {}
 const translationParams = reactive({
   ...defaultPreferences,
-  ...(loadPreferences() || {}),
+  ...initialPreferences,
+  translationBackend: initialPreferences.translationBackend || initialBackend,
 })
 
 // Apply accent color dynamically
@@ -323,20 +371,59 @@ watch(() => translationParams.accentColor, (newColor) => {
   }
 }, { immediate: true })
 
-// Save preferences to localStorage whenever they change
+// Track if we're currently switching backends to avoid saving during switch
+let isSwitchingBackend = false
+
+// Watch for backend changes and switch configurations
+watch(
+  () => translationParams.translationBackend,
+  (newBackend, oldBackend) => {
+    if (oldBackend && newBackend !== oldBackend && !isSwitchingBackend) {
+      isSwitchingBackend = true
+      
+      // Save current configuration for the old backend
+      const currentConfig = { ...translationParams }
+      // Ensure the saved config has the correct backend marker
+      currentConfig.translationBackend = oldBackend
+      savePreferences(currentConfig, oldBackend)
+      
+      // Load configuration for the new backend
+      const newConfig = loadPreferences(newBackend) || {}
+      
+      // Update translationParams with new backend's config
+      // First, reset all non-backend fields to defaults
+      Object.keys(defaultPreferences).forEach(key => {
+        if (key !== 'translationBackend') {
+          translationParams[key] = defaultPreferences[key]
+        }
+      })
+      
+      // Then apply the new backend's saved config
+      Object.keys(newConfig).forEach(key => {
+        if (key !== 'translationBackend' && defaultPreferences.hasOwnProperty(key)) {
+          translationParams[key] = newConfig[key]
+        }
+      })
+      
+      // Ensure translationBackend is set correctly
+      translationParams.translationBackend = newBackend
+      
+      isSwitchingBackend = false
+    }
+  }
+)
+
+// Save preferences to localStorage whenever they change (but not during backend switch)
 let saveTimeout
 watch(
   translationParams,
   (newParams) => {
-    // Create a clean copy without undefined values for storage
-    const toStore = { ...newParams }
-    // Remove undefined values
-    Object.keys(toStore).forEach(key => {
-      if (toStore[key] === undefined) {
-        delete toStore[key]
-      }
-    })
-    localStorage.setItem('translationPreferences', JSON.stringify(toStore))
+    if (isSwitchingBackend) {
+      return // Don't save during backend switch
+    }
+    
+    const backend = newParams.translationBackend || 'stable'
+    savePreferences(newParams, backend)
 
     // Show saved indicator
     isSaved.value = true
@@ -355,8 +442,9 @@ watch(
     serviceStatus.value = 'ready'
     
     const backends = response.data.backends || {}
-    const savedBackend = loadPreferences()?.translationBackend
-    const savedService = loadPreferences()?.service
+    const currentBackend = translationParams.translationBackend || 'stable'
+    const currentPreferences = loadPreferences(currentBackend)
+    const savedService = currentPreferences?.service || translationParams.service
     
     // Check for deprecated services and reset to default
     const deprecatedServices = ['Google', 'Bing']
@@ -366,13 +454,19 @@ watch(
     }
     
     // If user has stable saved but it's not available, switch to experimental
-    if (savedBackend === 'stable' && backends.stable && !backends.stable.available) {
+    if (currentBackend === 'stable' && backends.stable && !backends.stable.available) {
       console.log('Stable backend not available, switching to experimental')
       translationParams.translationBackend = 'experimental'
     }
-    // Set default backend mode from server if not already set in localStorage
-    else if (response.data.default_backend && !savedBackend) {
+    // Set default backend mode from server if not already set
+    else if (response.data.default_backend && !currentPreferences) {
       translationParams.translationBackend = response.data.default_backend
+      // Load the default backend's preferences
+      const defaultBackendPrefs = loadPreferences(response.data.default_backend)
+      if (defaultBackendPrefs) {
+        Object.assign(translationParams, defaultBackendPrefs)
+        translationParams.translationBackend = response.data.default_backend
+      }
     }
   } catch (error) {
     console.error('Failed to load config:', error)
