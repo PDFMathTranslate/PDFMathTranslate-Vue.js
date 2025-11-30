@@ -615,15 +615,10 @@ const isExperimentalBackend = computed(() => translationBackend.value === 'exper
         </AccordionContent>
       </AccordionItem>
       
-      <!-- Reset settings button for stable backend (without advanced options) -->
-      <div v-if="isStableBackend" class="pt-4">
-        <Button variant="destructive" class="w-full" @click="resetSettings">
-          {{ t('settings.resetSettings') }}
-        </Button>
-      </div>
-    </Accordion>
-
-    <div class="space-y-2">
+      <AccordionItem value="appearance">
+        <AccordionTrigger>{{ t('settings.appearance') || 'Appearance' }}</AccordionTrigger>
+        <AccordionContent class="space-y-4 pt-2">
+          <div class="space-y-2">
             <Label>{{ t('settings.accentColor') }}</Label>
             <div class="grid grid-cols-5 gap-3">
               <div 
@@ -647,7 +642,16 @@ const isExperimentalBackend = computed(() => translationBackend.value === 'exper
               </div>
             </div>
           </div>
-          
+        </AccordionContent>
+      </AccordionItem>
+      
+      <!-- Reset settings button for stable backend (without advanced options) -->
+      <div v-if="isStableBackend" class="pt-4">
+        <Button variant="destructive" class="w-full" @click="resetSettings">
+          {{ t('settings.resetSettings') }}
+        </Button>
+      </div>
+    </Accordion>
   </div>
 </template>
 
